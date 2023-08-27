@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!--==================== ICONS ====================-->
+        <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+        <script src="https://kit.fontawesome.com/131166bced.js" crossorigin="anonymous"></script>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        rel="stylesheet">        
+        
+        <!--==================== SWIPER CSS ====================-->
+        <link rel="stylesheet" href="">
+        
+        <!--==================== CSS ====================-->
+        <link rel="stylesheet" href="../css/styles.css">
+
+        <!--==================== FAVICON ====================-->
+        <link rel="icon" href="assets/img/favicon.ico">
+
+        <!--==================== TITLE ====================-->
+        <title>Guess the number!!</title>
+
+
+    </head>
+    <body>
+
+
+
+        <!--==================== HEADER ====================-->
+        <header class="header" id="header">
+            <nav class="nav container">
+                <a href="../../index.html" class="nav_logo">MAGNUS</a>
+
+                <div class="nav_menu" id="nav-menu">
+                    <ul class="nav_list grid">
+                        <li class="nav_item">
+                            <a href="../../index.html" class="nav_link">
+                                <i class="material-icons nav_icon">home</i>Home
+                            </a>
+                        </li>
+                        <li class="nav_item">
+                            <a href="../../index.html#about" class="nav_link">
+                                <i class="material-icons nav_icon">face</i>About
+                            </a>
+                        </li>
+                        <li class="nav_item">
+                            <a href="../html/skills.html" class="nav_link">
+                                <i class="material-icons nav_icon">article</i>Skills
+                            </a>
+                        </li>
+                        <li class="nav_item">
+                            <a href="../html/qualifications.html" class="nav_link">
+                                <i class="material-icons nav_icon">workspace_premium</i>Qualifications
+                            </a>
+                        </li>
+                        <li class="nav_item">
+                            <a href="../html/games.html" class="nav_link">
+                                <i class="material-icons nav_icon">videogame_asset</i>Games
+                            </a>
+                        </li>
+                        <li class="nav_item">
+                            <a href="#contact" class="nav_link">
+                                <i class="material-icons nav_icon">question_answer</i>Contact
+                            </a>
+                        </li>
+                    </ul>
+                    <i class="material-icons nav_close" id="nav-close">close</i>
+                </div>
+
+                <div class="nav_btns">
+
+                    <i class="material-icons change_theme" id="theme-button">brightness_4</i>
+                    <div class="nav_toggle" id="nav-toggle">
+                        <i class="material-icons">menu</i>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+
+        <main  class="main">
+            <!--==================== GAMES ====================-->
+            <section class="game section" id="game">
+                <h2 class="section_title">Let's play a game!</h2>
+                <span class="section_subtitle">Guess the right number!</span>
+            </section>
+            <fieldset>
+                <legend>Please enter a number between 1 and 100</legend>
+                <div class="ToaN_container container grid">
+                    <div class="ToaN_screen">
+                        <label for="guess_num">Number:</label>
+                        <input type="number" id="guess_num" class="Screen"> <br> <br>
+                    </div>
+                    <div class="ToaN_button">
+                        <input type="button" class="button button--flex" id="Guess" value="Guess" onclick="GuessTheValue()">
+                        <input type="button" class="button button--flex" id="Restart" value="Restart" onclick="RestartGame()">
+                    </div>
+
+                </div>
+            </fieldset>
+            <div class="ToaN_message" id="mess_section">
+                <p id="message"></p>
+            </div>
+        </main>
+
+
+        <!--==================== FOOTER ====================-->
+        <footer class="footer" id="contact">
+            <div class="footer_bg">
+                <div class="footer_container container grid">
+                    <div class="footer_ps">
+                        <h1 class="footer_ps_title">MAGNUS</h1>
+                        <p class="text_art">
+                            ███╗░░░███╗░█████╗░░██████╗░███╗░░██╗██╗░░░██╗░██████╗
+                            ████╗░████║██╔══██╗██╔════╝░████╗░██║██║░░░██║██╔════╝
+                            ██╔████╔██║███████║██║░░██╗░██╔██╗██║██║░░░██║╚█████╗░
+                            ██║╚██╔╝██║██╔══██║██║░░╚██╗██║╚████║██║░░░██║░╚═══██╗
+                            ██║░╚═╝░██║██║░░██║╚██████╔╝██║░╚███║╚██████╔╝██████╔╝
+                            ╚═╝░░░░░╚═╝╚═╝░░╚═╝░╚═════╝░╚═╝░░╚══╝░╚═════╝░╚═════╝░
+                        </p>
+
+                        <div class="footer_social">
+                            <a href="https://www.linkedin.com/in/nguyen-minh-tu-12449a210"  class="footer_social-icon">
+                                LinedIn
+                            </a>
+
+                            <a href="https://slack.com/"  class="footer_social-icon">
+                                Slack                            
+                            </a>
+                            
+                            <a href="https://github.com/MagnusDG"  class="footer_social-icon">
+                                Github
+                            </a>
+
+                            <a href="https://www.twitch.tv/cabtainmagnus"  class="footer_social-icon">
+                                Twitch                            
+                            </a>
+                        </div>
+
+                    </div>
+                    <div class="footer_contact_text">
+                        <h3 class="footer_contact_title">I'd love to hear from you!</h3>
+                        <p class="footer_contact_subtitle">My social media platform:</p>
+
+                        <div class="footer_links">
+                            <a href="https://www.facebook.com" class="footer_contact">
+                                <p>Find me on Facebook</p>
+                            </a>
+                            <a href="mailto:minhtudg03@gmail.com? subject=subject text" class="footer_contact">
+                                <p>minhtudg03@gmail.com</p>
+                            </a>
+                            <a href="tel:+84383125393" class="footer_contact">
+                                <p>+84 383125393</p>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </footer>
+
+
+        <!--==================== MAIN JS ====================-->
+        <script src="../js/main.js"></script>
+    </body>
+</html>
