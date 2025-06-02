@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VQ, RVQ & QINCO2 Visualization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #f0f4f8; color: #333; }
+        .controls-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .canvas-container { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 10px; }
+        canvas { display: block; background-color: #e9eef2; border-radius: 4px; max-width: 100%; }
+        button { transition: background-color 0.3s ease; }
+        input[type="number"] { width: 80px; }
+        .info-box { margin-top: 15px; padding: 10px; background-color: #e0e7ff; border-radius: 4px; font-size: 0.9em; }
+        .algorithm-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; }
+        h3 { margin-bottom: 5px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="w-full text-center mb-6">
+            <a href="index.html" title="Back to QINCO2 diagram page"
+               class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-150 ease-in-out transform hover:scale-105">
+                &larr; Back to Diagram
+            </a>
+        </div>
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-700">VQ, RVQ & QINCO2 Visualization (Improved)</h1>
+            <p class="text-gray-600">Explore how vector quantization algorithms work, with an improved QINCO2 based on the "implicit neural codebooks" idea.</p>
+        </header>
+
+        <div class="controls-container">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div>
+                    <label for="numPoints" class="block text-sm font-medium text-gray-700">Number of data points:</label>
+                    <input type="number" id="numPoints" value="50" class="mt-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <button id="generateDataBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+                        Generate New Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h3 class="text-xl font-semibold text-indigo-600">Vector Quantization (VQ)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label for="numClustersK" class="block text-sm font-medium text-gray-700">Number of clusters (K):</label>
+                        <input type="number" id="numClustersK" value="4" min="1" class="mt-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <button id="runVQBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+                            Run VQ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h3 class="text-xl font-semibold text-indigo-600">Residual VQ (RVQ)</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="rvqK" class="block text-sm font-medium text-gray-700">K per stage:</label>
+                        <input type="number" id="rvqK" value="4" min="1" class="mt-1 p-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="rvqStages" class="block text-sm font-medium text-gray-700">Number of stages:</label>
+                        <input type="number" id="rvqStages" value="2" min="1" max="4" class="mt-1 p-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <button id="runRVQBtn" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+                            Run RVQ
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="algorithm-section">
+                <h3 class="text-xl font-semibold text-indigo-600">QINCO2 (Improved)</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="qincoK" class="block text-sm font-medium text-gray-700">Base K per stage:</label>
+                        <input type="number" id="qincoK" value="4" min="1" class="mt-1 p-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="qincoStages" class="block text-sm font-medium text-gray-700">Number of QINCO2 stages:</label>
+                        <input type="number" id="qincoStages" value="2" min="1" max="4" class="mt-1 p-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <button id="runQINCO2Btn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+                            Run QINCO2
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="infoBox" class="info-box hidden"></div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="visualizationCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('visualizationCanvas');
+        const ctx = canvas.getContext('2d');
+        const numPointsInput = document.getElementById('numPoints');
+        const generateDataBtn = document.getElementById('generateDataBtn');
+        const numClustersKInput = document.getElementById('numClustersK');
+        const runVQBtn = document.getElementById('runVQBtn');
+        
+        const rvqKInput = document.getElementById('rvqK');
+        const rvqStagesInput = document.getElementById('rvqStages');
+        const runRVQBtn = document.getElementById('runRVQBtn');
+
+        const qincoKInput = document.getElementById('qincoK');
+        const qincoStagesInput = document.getElementById('qincoStages'); 
+        const runQINCO2Btn = document.getElementById('runQINCO2Btn');
+        
+        const infoBox = document.getElementById('infoBox');
+
+        let dataPoints = [];
+        let centroids = []; // Used by VQ
+        let assignments = []; // Used by VQ
+        let currentAlgorithm = '';
+        let rvqQuantizedStages = []; 
+        let qincoData = { // Store QINCO specific data
+            baseCodebooks: [],
+            finalReconstruction: [],
+            perStageContributions: [] // To store f_theta(c | x_prev) for each point at each stage
+        };
+
+
+        const MAX_ITERATIONS_KMEANS = 15; // Reduced for faster viz
+        const POINT_RADIUS = 4;
+        const CENTROID_RADIUS = 7;
+        const EFFECTIVE_CENTROID_RADIUS = 5;
+
+        // Canvas setup
+        function setupCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth - 20, 500); 
+            canvas.width = size;
+            canvas.height = size;
+            clearCanvas();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#e9eef2'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function showInfo(message) {
+            infoBox.textContent = message;
+            infoBox.classList.remove('hidden');
+        }
+
+        // --- Data Generation ---
+        function generateDataPoints() {
+            clearCanvas();
+            const count = parseInt(numPointsInput.value);
+            dataPoints = [];
+            for (let i = 0; i < count; i++) {
+                dataPoints.push({
+                    x: Math.random() * canvas.width * 0.8 + canvas.width * 0.1, 
+                    y: Math.random() * canvas.height * 0.8 + canvas.height * 0.1
+                });
+            }
+            centroids = [];
+            assignments = [];
+            rvqQuantizedStages = [];
+            qincoData = { baseCodebooks: [], finalReconstruction: [], perStageContributions: [] };
+            currentAlgorithm = '';
+            drawDataPoints(dataPoints, '#3b82f6'); 
+            showInfo(`Generated ${count} data points.`);
+        }
+
+        // --- Drawing Functions ---
+        function drawDataPoints(points, color, radius = POINT_RADIUS, specificCtx = ctx) {
+            specificCtx.fillStyle = color;
+            points.forEach(p => {
+                if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+                    specificCtx.beginPath();
+                    specificCtx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+                    specificCtx.fill();
+                }
+            });
+        }
+
+        function drawCentroids(cents, color, radius = CENTROID_RADIUS, specificCtx = ctx, stroke = false) {
+            specificCtx.fillStyle = color;
+            specificCtx.strokeStyle = '#000'; 
+            cents.forEach(c => {
+                 if (c && typeof c.x === 'number' && typeof c.y === 'number') {
+                    specificCtx.beginPath();
+                    specificCtx.arc(c.x, c.y, radius, 0, 2 * Math.PI);
+                    specificCtx.fill();
+                    if (stroke) specificCtx.stroke();
+                }
+            });
+        }
+        
+        function drawLinesToCentroids(points, assigns, cents, color = 'rgba(100, 100, 100, 0.3)', specificCtx = ctx) {
+            specificCtx.strokeStyle = color;
+            specificCtx.lineWidth = 1;
+            points.forEach((p, i) => {
+                if (assigns[i] !== undefined && cents[assigns[i]] && p && cents[assigns[i]]) {
+                    specificCtx.beginPath();
+                    specificCtx.moveTo(p.x, p.y);
+                    specificCtx.lineTo(cents[assigns[i]].x, cents[assigns[i]].y);
+                    specificCtx.stroke();
+                }
+            });
+        }
+
+        function drawQuantizedPoints(originalPoints, quantizedPoints, color = '#22c55e', radius = POINT_RADIUS -1, specificCtx = ctx) {
+            specificCtx.strokeStyle = 'rgba(150, 150, 150, 0.4)';
+            specificCtx.lineWidth = 0.5;
+            originalPoints.forEach((op, i) => {
+                if (quantizedPoints[i] && op && quantizedPoints[i]) {
+                    specificCtx.beginPath();
+                    specificCtx.moveTo(op.x, op.y);
+                    specificCtx.lineTo(quantizedPoints[i].x, quantizedPoints[i].y);
+                    specificCtx.stroke();
+                }
+            });
+            drawDataPoints(quantizedPoints, color, radius, specificCtx);
+        }
+
+        // --- K-Means Algorithm (Core for VQ & RVQ stages & QINCO base codebook init) ---
+        function distanceSquared(p1, p2) {
+            if (!p1 || !p2 || typeof p1.x !== 'number' || typeof p1.y !== 'number' || typeof p2.x !== 'number' || typeof p2.y !== 'number') return Infinity;
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            return dx * dx + dy * dy;
+        }
+         function distance(p1, p2) {
+            return Math.sqrt(distanceSquared(p1,p2));
+        }
+
+
+        async function runKMeans(currentData, K, currentCentroidsRef, currentAssignmentsRef, iterationCallback) {
+            if (!currentData || currentData.length === 0) {
+                currentCentroidsRef.current = [];
+                currentAssignmentsRef.current = [];
+                if (iterationCallback) await iterationCallback(currentData, [], [], 0, true);
+                return;
+            }
+
+            // 1. Initialization
+            if (!currentCentroidsRef.current || currentCentroidsRef.current.length !== K) {
+                currentCentroidsRef.current = [];
+                const usedIndices = new Set();
+                if (currentData.length <= K) { 
+                    currentCentroidsRef.current = currentData.map(p => ({...p})); // Copy
+                    while(currentCentroidsRef.current.length < K && currentData.length > 0) { 
+                         currentCentroidsRef.current.push({...currentData[Math.floor(Math.random() * currentData.length)]});
+                    }
+                     while(currentCentroidsRef.current.length < K ) { // Fill with random if still not enough (e.g. currentData was empty)
+                        currentCentroidsRef.current.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height});
+                    }
+                } else {
+                    while (currentCentroidsRef.current.length < K) {
+                        const randomIndex = Math.floor(Math.random() * currentData.length);
+                        if (!usedIndices.has(randomIndex)) {
+                            currentCentroidsRef.current.push({ ...currentData[randomIndex] });
+                            usedIndices.add(randomIndex);
+                        }
+                    }
+                }
+            }
+
+            for (let iter = 0; iter < MAX_ITERATIONS_KMEANS; iter++) {
+                // 2. Assignment step
+                currentAssignmentsRef.current = currentData.map(point => {
+                    let closestCentroidIndex = 0;
+                    let minDistSq = Infinity;
+                    currentCentroidsRef.current.forEach((centroid, index) => {
+                        const distSq = distanceSquared(point, centroid);
+                        if (distSq < minDistSq) {
+                            minDistSq = distSq;
+                            closestCentroidIndex = index;
+                        }
+                    });
+                    return closestCentroidIndex;
+                });
+
+                if (iterationCallback) await iterationCallback(currentData, currentCentroidsRef.current, currentAssignmentsRef.current, iter, false);
+
+                // 3. Update step
+                const newCentroids = Array(K).fill(null).map(() => ({ x: 0, y: 0, count: 0 }));
+                currentData.forEach((point, i) => {
+                    const assignment = currentAssignmentsRef.current[i];
+                    if (assignment !== undefined && newCentroids[assignment]) { 
+                        newCentroids[assignment].x += point.x;
+                        newCentroids[assignment].y += point.y;
+                        newCentroids[assignment].count++;
+                    }
+                });
+
+                let converged = true;
+                for (let i = 0; i < K; i++) {
+                    if (newCentroids[i] && newCentroids[i].count > 0) {
+                        const updatedX = newCentroids[i].x / newCentroids[i].count;
+                        const updatedY = newCentroids[i].y / newCentroids[i].count;
+                        if (currentCentroidsRef.current[i] && (currentCentroidsRef.current[i].x !== updatedX || currentCentroidsRef.current[i].y !== updatedY)) {
+                            converged = false;
+                        }
+                        currentCentroidsRef.current[i] = { x: updatedX, y: updatedY };
+                    } else if (currentData.length > 0) { // Handle empty cluster: re-initialize centroid
+                        const randomIndex = Math.floor(Math.random() * currentData.length);
+                        currentCentroidsRef.current[i] = { ...currentData[randomIndex] };
+                        converged = false; 
+                    } else { // No data to pick from
+                        currentCentroidsRef.current[i] = {x: Math.random()*canvas.width, y: Math.random()*canvas.height};
+                        converged = false;
+                    }
+                }
+                
+                if (iterationCallback) await iterationCallback(currentData, currentCentroidsRef.current, currentAssignmentsRef.current, iter, converged);
+
+                if (converged && iter > 0) { 
+                    if (currentAlgorithm !== 'QINCO2_INIT') showInfo(`K-Means converged after ${iter + 1} iterations.`);
+                    break;
+                }
+                if (iter === MAX_ITERATIONS_KMEANS -1 && currentAlgorithm !== 'QINCO2_INIT') {
+                    showInfo(`K-Means reached max ${MAX_ITERATIONS_KMEANS} iterations.`);
+                }
+                if (currentAlgorithm !== 'QINCO2_INIT') await new Promise(resolve => setTimeout(resolve, 50)); // Shorter delay for k-means steps
+            }
+        }
+
+        // --- VQ Specific ---
+        async function runVQ() {
+            if (dataPoints.length === 0) {  showInfo("Please generate data first!"); return; }
+            currentAlgorithm = 'VQ';
+            const K = parseInt(numClustersKInput.value);
+            centroids = []; 
+            assignments = [];
+            
+            let centroidsRef = { current: centroids };
+            let assignmentsRef = { current: assignments };
+
+            showInfo("Running VQ...");
+
+            await runKMeans(dataPoints, K, centroidsRef, assignmentsRef, async (currentData, currentCentroids, currentAssignments, iter, converged) => {
+                centroids = currentCentroids; 
+                assignments = currentAssignments; 
+                clearCanvas();
+                drawDataPoints(dataPoints, '#3b82f6'); 
+                drawLinesToCentroids(dataPoints, assignments, centroids, 'rgba(100,100,100,0.3)');
+                drawCentroids(centroids, '#d946ef', CENTROID_RADIUS, ctx, true); 
+                
+                if (converged || iter === MAX_ITERATIONS_KMEANS - 1) {
+                    const quantizedData = dataPoints.map((_, i) => assignments[i] !== undefined && centroids[assignments[i]] ? centroids[assignments[i]] : {x:0,y:0});
+                    drawQuantizedPoints(dataPoints, quantizedData, '#10b981', POINT_RADIUS -1); 
+                    drawCentroids(centroids, '#d946ef', CENTROID_RADIUS, ctx, true); 
+                    showInfo(`VQ complete. MSE: ${calculateMSE(dataPoints, quantizedData).toFixed(4)}`);
+                }
+            });
+        }
+        
+        // --- RVQ Specific ---
+        async function runRVQ() {
+            if (dataPoints.length === 0) { showInfo("Please generate data first!"); return; }
+            currentAlgorithm = 'RVQ';
+            const K = parseInt(rvqKInput.value);
+            const numStages = parseInt(rvqStagesInput.value);
+            rvqQuantizedStages = [];
+            let currentResiduals = dataPoints.map(p => ({...p})); 
+            let accumulatedQuantized = dataPoints.map(() => ({x: 0, y: 0}));
+
+            showInfo(`Running RVQ with ${numStages} stages, K=${K}...`);
+            clearCanvas();
+            drawDataPoints(dataPoints, 'rgba(59, 130, 246, 0.2)'); 
+
+            for (let stage = 0; stage < numStages; stage++) {
+                showInfo(`RVQ - Stage ${stage + 1}/${numStages}...`);
+                let stageCentroids = [];
+                let stageAssignments = [];
+                
+                let stageCentroidsRef = { current: stageCentroids };
+                let stageAssignmentsRef = { current: stageAssignments };
+
+                await runKMeans(currentResiduals, K, stageCentroidsRef, stageAssignmentsRef, async (data, cents, assigns, iter, conv) => {
+                    stageCentroids = cents;
+                    stageAssignments = assigns;
+                    
+                    clearCanvas();
+                    drawDataPoints(dataPoints, 'rgba(59, 130, 246, 0.1)'); 
+                    
+                    let tempAccumulated = dataPoints.map(() => ({x:0, y:0})); // Recalculate for visualization
+                    for(let prevStageData of rvqQuantizedStages) { // Use stored quantized values
+                        prevStageData.quantized.forEach((q, idx) => {
+                             if (q && tempAccumulated[idx]) {
+                                tempAccumulated[idx].x += q.x;
+                                tempAccumulated[idx].y += q.y;
+                            }
+                        });
+                    }
+                     const currentStageQuantizedViz = currentResiduals.map((_, i) => stageAssignments[i] !== undefined && stageCentroids[stageAssignments[i]] ? stageCentroids[stageAssignments[i]] : {x:0,y:0});
+                     currentStageQuantizedViz.forEach((q, idx) => {
+                         if(q && tempAccumulated[idx]) { 
+                            tempAccumulated[idx].x += q.x;
+                            tempAccumulated[idx].y += q.y;
+                         }
+                     });
+
+                    drawQuantizedPoints(dataPoints, tempAccumulated, `rgba(168, 85, 247, ${0.5 + stage * 0.1})`, POINT_RADIUS -1);
+                    if (conv || iter === MAX_ITERATIONS_KMEANS -1) {
+                         await new Promise(resolve => setTimeout(resolve, 100)); 
+                    }
+                });
+                
+                const quantizedForThisStage = currentResiduals.map((_, i) => stageAssignments[i] !== undefined && stageCentroids[stageAssignments[i]] ? {...stageCentroids[stageAssignments[i]]} : {x:0,y:0});
+                rvqQuantizedStages.push({ centroids: stageCentroids.map(c=>({...c})), assignments: [...stageAssignments], quantized: quantizedForThisStage });
+
+                quantizedForThisStage.forEach((q, i) => {
+                    if(q && accumulatedQuantized[i]) {
+                        accumulatedQuantized[i].x += q.x;
+                        accumulatedQuantized[i].y += q.y;
+                    }
+                });
+
+                if (stage < numStages - 1) {
+                    currentResiduals = currentResiduals.map((p, i) => {
+                        const qVal = quantizedForThisStage[i];
+                        return (qVal && p) ? { x: p.x - qVal.x, y: p.y - qVal.y } : (p ? {...p} : {x:0,y:0});
+                    });
+                }
+            }
+            
+            clearCanvas();
+            drawDataPoints(dataPoints, 'rgba(59, 130, 246, 0.3)'); 
+            drawQuantizedPoints(dataPoints, accumulatedQuantized, '#a855f7', POINT_RADIUS); 
+            showInfo(`RVQ complete with ${numStages} stages. MSE: ${calculateMSE(dataPoints, accumulatedQuantized).toFixed(4)}`);
+        }
+
+        // --- QINCO2 (Improved) Specific ---
+        // Simulates QINCO's core idea: neural network f_theta(c | x_prev) modifies base codewords
+        function apply_neural_transform(base_codeword, prev_reconstruction, stage_index) {
+            if (!base_codeword || !prev_reconstruction) return {x:0, y:0};
+            const { x: bcx, y: bcy } = base_codeword;
+            const { x: prx, y: pry } = prev_reconstruction;
+
+            // Simple non-linear transformation based on prev_reconstruction and stage
+            // These coefficients are arbitrary, just to create some dynamic behavior
+            const s_factor = 0.01 * (stage_index + 1);
+            const pr_norm_x = prx / (canvas.width || 1); // Normalize prev_reconstruction influence
+            const pr_norm_y = pry / (canvas.height || 1);
+
+            let h1 = Math.tanh(bcx * 0.1 * s_factor + pr_norm_x * 0.5 - pr_norm_y * 0.2);
+            let h2 = Math.tanh(bcy * 0.1 * s_factor + pr_norm_y * 0.5 + pr_norm_x * 0.1);
+
+            // Output is a modified residual vector
+            let out_x = bcx * (1 + h1 * 0.2 * s_factor) + h2 * 10 * s_factor; // Modulate base, add influence
+            let out_y = bcy * (1 + h2 * 0.2 * s_factor) - h1 * 10 * s_factor;
+            
+            // Ensure output is not excessively large or small compared to base
+            const base_mag = Math.sqrt(bcx*bcx + bcy*bcy) || 1e-6; // Avoid division by zero
+            const out_mag = Math.sqrt(out_x*out_x + out_y*out_y);
+
+            if (out_mag > base_mag * 2.5 && out_mag > 1e-6) { // Cap expansion
+                const scale = (base_mag * 2.5) / out_mag;
+                out_x *= scale;
+                out_y *= scale;
+            } else if (out_mag < base_mag * 0.4 && base_mag > 1e-6 && out_mag > 1e-9) { // Cap contraction (avoid zeroing out if base_mag is small)
+                 const scale = (base_mag * 0.4) / out_mag;
+                 out_x *= scale;
+                 out_y *= scale;
+            } else if (out_mag < 1e-9 && base_mag > 1e-6) { // If it became zero, give it a small nudge in original direction
+                out_x = bcx * 0.1;
+                out_y = bcy * 0.1;
+            }
+
+
+            return { x: out_x, y: out_y };
+        }
+
+        async function runQINCO2() {
+            if (dataPoints.length === 0) { showInfo("Please generate data first!"); return; }
+            
+            const numStages = parseInt(qincoStagesInput.value);
+            const K_per_stage = parseInt(qincoKInput.value);
+            currentAlgorithm = 'QINCO2_RUN'; // Distinguish from init K-Means
+
+            // 1. Initialize Base Codebooks C^1, ..., C^M using an RVQ-like process
+            qincoData.baseCodebooks = [];
+            let tempResidualsForInit = dataPoints.map(p => ({...p}));
+            
+            const oldCurrentAlgo = currentAlgorithm; // Save current algo state
+            currentAlgorithm = 'QINCO2_INIT'; // Suppress K-Means info messages during init
+            showInfo("QINCO2: Initializing base codebooks...");
+
+            for (let stage = 0; stage < numStages; stage++) {
+                let stageCentroidsRef = { current: [] };
+                let stageAssignmentsRef = { current: [] };
+                await runKMeans(tempResidualsForInit, K_per_stage, stageCentroidsRef, stageAssignmentsRef, 
+                    (data, cents, assigns, iter, conv) => { /* No per-iteration viz during init */ }
+                );
+                qincoData.baseCodebooks.push(stageCentroidsRef.current.map(c => ({...c})));
+
+                if (stage < numStages - 1 && tempResidualsForInit.length > 0) {
+                    const quantizedForThisInitStage = tempResidualsForInit.map((_,i) => {
+                        const assign = stageAssignmentsRef.current[i];
+                        return (assign !== undefined && stageCentroidsRef.current[assign]) ? stageCentroidsRef.current[assign] : {x:0, y:0};
+                    });
+                    tempResidualsForInit = tempResidualsForInit.map((p, i) => {
+                        const q = quantizedForThisInitStage[i];
+                        return (q && p) ? { x: p.x - q.x, y: p.y - q.y } : (p ? {...p} : {x:0,y:0});
+                    });
+                }
+            }
+            currentAlgorithm = oldCurrentAlgo; // Restore algo state
+            showInfo("QINCO2: Base codebooks initialized. Starting QINCO2 process...");
+            await new Promise(resolve => setTimeout(resolve, 200)); // Pause
+
+            // 2. QINCO2 Process
+            qincoData.perStageContributions = [];
+            qincoData.finalReconstruction = dataPoints.map(() => ({ x: 0, y: 0 }));
+
+            for (let stage = 0; stage < numStages; stage++) {
+                showInfo(`QINCO2 (Improved) - Stage ${stage + 1}/${numStages}...`);
+                const currentBaseCodebook = qincoData.baseCodebooks[stage];
+                if (!currentBaseCodebook || currentBaseCodebook.length === 0) {
+                    showInfo(`Error: Base codebook for stage ${stage+1} is empty!`);
+                    return;
+                }
+                let currentStageFinalContributions = []; // Stores f_theta(c_chosen | prev_recon) for each data point
+
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const originalPoint = dataPoints[i];
+                    const prevGlobalRecon = qincoData.finalReconstruction[i]; // This is \hat{x}^{m-1} for point i
+                    
+                    const residualToQuantize = { 
+                        x: originalPoint.x - prevGlobalRecon.x, 
+                        y: originalPoint.y - prevGlobalRecon.y 
+                    };
+
+                    let minEffectiveDistSq = Infinity;
+                    let effectiveBestContribForPoint = {x:0, y:0}; // Default to zero vector
+
+                    for (const base_c_k of currentBaseCodebook) {
+                        const effective_c_k_contrib = apply_neural_transform(base_c_k, prevGlobalRecon, stage);
+                        const distSq = distanceSquared(residualToQuantize, effective_c_k_contrib);
+
+                        if (distSq < minEffectiveDistSq) {
+                            minEffectiveDistSq = distSq;
+                            effectiveBestContribForPoint = effective_c_k_contrib;
+                        }
+                    }
+                    currentStageFinalContributions.push(effectiveBestContribForPoint);
+                }
+                
+                qincoData.perStageContributions.push(currentStageFinalContributions.map(c=>({...c})));
+
+                // Update global reconstruction by adding current stage's contributions
+                currentStageFinalContributions.forEach((contrib, i) => {
+                    if (contrib && qincoData.finalReconstruction[i]) {
+                        qincoData.finalReconstruction[i].x += contrib.x;
+                        qincoData.finalReconstruction[i].y += contrib.y;
+                    }
+                });
+                
+                // Visualization update per stage
+                clearCanvas();
+                drawDataPoints(dataPoints, 'rgba(59, 130, 246, 0.15)'); 
+                drawQuantizedPoints(dataPoints, qincoData.finalReconstruction, '#0d9488', POINT_RADIUS); // Darker Teal for QINCO2 final
+
+                // For a single example point (e.g. dataPoints[0]), show its current residual and the effective codebook
+                if (dataPoints.length > 0 && K_per_stage > 0) {
+                    const exampleIdx = 0;
+                    const examplePoint = dataPoints[exampleIdx];
+                    
+                    // Calculate \hat{x}^{m-1} for the example point for this stage
+                    let examplePrevReconForThisStage = {x:0, y:0};
+                    for(let s_idx = 0; s_idx < stage; s_idx++) {
+                        if (qincoData.perStageContributions[s_idx] && qincoData.perStageContributions[s_idx][exampleIdx]) {
+                           examplePrevReconForThisStage.x += qincoData.perStageContributions[s_idx][exampleIdx].x;
+                           examplePrevReconForThisStage.y += qincoData.perStageContributions[s_idx][exampleIdx].y;
+                        }
+                    }
+
+                    const exampleResidual = {
+                        x: examplePoint.x - examplePrevReconForThisStage.x,
+                        y: examplePoint.y - examplePrevReconForThisStage.y
+                    };
+
+                    // Draw example point and its true residual for this stage
+                    drawDataPoints([examplePoint], 'orange', POINT_RADIUS + 2); 
+                    ctx.beginPath();
+                    ctx.moveTo(examplePrevReconForThisStage.x, examplePrevReconForThisStage.y);
+                    ctx.lineTo(examplePoint.x, examplePoint.y);
+                    ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)'; // Orange line for true residual
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                     drawDataPoints([{x: examplePrevReconForThisStage.x, y: examplePrevReconForThisStage.y}], 'rgba(255,100,0,0.8)', POINT_RADIUS); // Start of residual
+
+
+                    // Draw effective codebook for this example point's prevRecon
+                    // These are f_theta(c_k | \hat{x}^{m-1}_example)
+                    const effectiveResidualCandidates = qincoData.baseCodebooks[stage].map(base_c_k => 
+                        apply_neural_transform(base_c_k, examplePrevReconForThisStage, stage)
+                    );
+                    
+                    // The effective centroids for visualization are \hat{x}^{m-1}_example + f_theta(c_k | \hat{x}^{m-1}_example)
+                    const effectiveGlobalCentroidsForViz = effectiveResidualCandidates.map(eff_residual_c => ({
+                        x: examplePrevReconForThisStage.x + eff_residual_c.x,
+                        y: examplePrevReconForThisStage.y + eff_residual_c.y
+                    }));
+                    drawCentroids(effectiveGlobalCentroidsForViz, 'rgba(236, 72, 153, 0.6)', EFFECTIVE_CENTROID_RADIUS, ctx, true); // Pink, smaller, stroked
+                }
+                await new Promise(resolve => setTimeout(resolve, 400)); 
+            }
+            showInfo(`QINCO2 (Improved) complete with ${numStages} stages. MSE: ${calculateMSE(dataPoints, qincoData.finalReconstruction).toFixed(4)}`);
+            currentAlgorithm = 'QINCO2'; // Set final algorithm name
+        }
+
+
+        function calculateMSE(original, quantized) {
+            if (!original || !quantized || original.length !== quantized.length || original.length === 0) return 0;
+            let sumSqError = 0;
+            let count = 0;
+            for (let i = 0; i < original.length; i++) {
+                if (original[i] && quantized[i] && 
+                    typeof original[i].x === 'number' && typeof original[i].y === 'number' &&
+                    typeof quantized[i].x === 'number' && typeof quantized[i].y === 'number') {
+                    sumSqError += Math.pow(original[i].x - quantized[i].x, 2);
+                    sumSqError += Math.pow(original[i].y - quantized[i].y, 2);
+                    count++;
+                }
+            }
+            return count > 0 ? sumSqError / (count * 2) : 0; 
+        }
+
+        // --- Event Listeners ---
+        generateDataBtn.addEventListener('click', () => {
+            setupCanvas(); 
+            generateDataPoints();
+        });
+        runVQBtn.addEventListener('click', runVQ);
+        runRVQBtn.addEventListener('click', runRVQ);
+        runQINCO2Btn.addEventListener('click', runQINCO2);
+        
+        window.addEventListener('resize', () => {
+            setupCanvas();
+            if (dataPoints.length === 0) { clearCanvas(); return; }
+
+            drawDataPoints(dataPoints, '#3b82f6'); // Default draw original points
+            
+            if (currentAlgorithm === 'VQ' && centroids.length > 0 && assignments.length > 0) {
+                const quantizedData = dataPoints.map((_, i) => assignments[i] !== undefined && centroids[assignments[i]] ? centroids[assignments[i]] : {x:0,y:0});
+                drawLinesToCentroids(dataPoints, assignments, centroids);
+                drawQuantizedPoints(dataPoints, quantizedData, '#10b981', POINT_RADIUS -1);
+                drawCentroids(centroids, '#d946ef', CENTROID_RADIUS, ctx, true);
+            } else if (currentAlgorithm === 'RVQ' && rvqQuantizedStages.length > 0) {
+                 let accumulatedQuantized = dataPoints.map(() => ({x: 0, y: 0}));
+                 rvqQuantizedStages.forEach(stageData => {
+                    stageData.quantized.forEach((q,idx) => {
+                        if(q && accumulatedQuantized[idx]){
+                            accumulatedQuantized[idx].x += q.x;
+                            accumulatedQuantized[idx].y += q.y;
+                        }
+                    });
+                 });
+                drawDataPoints(dataPoints, 'rgba(59, 130, 246, 0.3)');
+                drawQuantizedPoints(dataPoints, accumulatedQuantized, '#a855f7', POINT_RADIUS);
+            } else if (currentAlgorithm === 'QINCO2' && qincoData.finalReconstruction && qincoData.finalReconstruction.length > 0) {
+                drawDataPoints(dataPoints, 'rgba(59, 130, 246, 0.15)');
+                drawQuantizedPoints(dataPoints, qincoData.finalReconstruction, '#0d9488', POINT_RADIUS);
+                // Potentially redraw the example point visualization if needed, but it's complex without re-running the stage
+            }
+        });
+
+        // Initial setup
+        setupCanvas();
+        generateDataPoints(); 
+    </script>
+</body>
+</html>
