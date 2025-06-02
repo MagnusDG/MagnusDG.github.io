@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive QINCO2 Flowchart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light background color */
+            color: #334155; /* Main text color */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .flowchart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 900px; /* Max width for the flowchart */
+        }
+        .flowchart-title {
+            font-size: 1.8rem; /* Increased title size */
+            font-weight: 700;
+            color: #1e3a8a; /* Dark blue for title */
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #3b82f6; /* Underline for title */
+            padding-bottom: 10px;
+        }
+        .step {
+            background-color: #e0e7ff; /* Background color for steps */
+            border: 1px solid #c7d2fe; /* Light border for steps */
+            color: #3730a3; /* Text color for steps */
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s;
+            cursor: pointer; /* Add cursor pointer for clickable steps */
+        }
+        .step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #c7d2fe; /* Slightly darker on hover */
+        }
+        .input-output {
+            background-color: #d1fae5; /* Green for input/output */
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+        .input-output:hover {
+            background-color: #a7f3d0;
+        }
+        .process {
+            background-color: #ffedd5; /* Orange for main processes */
+            border-color: #fed7aa;
+            color: #9a3412;
+        }
+        .process:hover {
+            background-color: #fed7aa;
+        }
+        .sub-process {
+            background-color: #fef3c7; /* Light yellow for sub-processes */
+            border-color: #fde68a;
+            color: #92400e;
+            font-size: 0.85rem;
+            padding: 10px 15px;
+        }
+        .sub-process:hover {
+            background-color: #fde68a;
+        }
+        .arrow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px 0;
+            height: 30px; /* Height for arrow */
+        }
+        .arrow::after {
+            content: '▼'; /* Down arrow character */
+            font-size: 1.5rem; /* Arrow size */
+            color: #60a5fa; /* Arrow color */
+        }
+        .horizontal-group {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start; /* Align items from top */
+            gap: 15px; /* Gap between child items */
+        }
+        .horizontal-group .step {
+            flex: 1; /* Steps take equal space */
+            min-width: 120px; /* Minimum width */
+        }
+        .dashed-line {
+            border-top: 2px dashed #93c5fd;
+            margin: 15px 0;
+        }
+        .loop-container {
+            border: 2px dashed #a5b4fc;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .loop-label {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background-color: #ffffff;
+            padding: 0 8px;
+            font-size: 0.8rem;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; 
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 25px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: #334155;
+        }
+        .modal-content h3 {
+            color: #1e3a8a;
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .modal-content p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .modal-content strong {
+            color: #4f46e5;
+        }
+        .modal-content code {
+            background-color: #eef2ff;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #c026d3;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .flowchart-title {
+                font-size: 1.5rem;
+            }
+            .step {
+                font-size: 0.8rem;
+                padding: 10px 12px;
+            }
+            .horizontal-group {
+                flex-direction: column; /* Stack horizontally grouped items on small screens */
+                align-items: center;
+            }
+            .horizontal-group .step {
+                width: 80%; /* Take most of the width */
+                margin-bottom: 10px;
+            }
+            .arrow::after {
+                font-size: 1.2rem;
+            }
+            .modal-content {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="modalTitle">Node Detail</h3>
+            <p id="modalDescription">Description will load here.</p>
+            <p><strong>Example:</strong> <span id="modalExample">Example will load here.</span></p>
+        </div>
+    </div>
+
+    <div class="flowchart-container">
+        <h2 class="flowchart-title">QINCO2 Vector Encoding Process</h2>
+        
+        <div class="step input-output" data-id="enc-input">Input Vector X</div>
+        <div class="arrow"></div>
+        
+        <div class="loop-container" data-id="enc-loop">
+            <div class="loop-label">Iterative Quantization (M Steps)</div>
+            
+            <div class="step process" data-id="enc-step-m">Step 'm'</div>
+            <div class="arrow"></div>
+            
+            <div class="step sub-process" data-id="enc-residual">Calculate Residual R<sub>m</sub> = X - X̂<sub>m-1</sub></div>
+            <div class="arrow"></div>
+            
+            <div class="step sub-process" data-id="enc-nn">Neural Network f<sub>θm</sub> (adapts to X̂<sub>m-1</sub>)</div>
+            <div class="arrow"></div>
+            
+            <div class="horizontal-group">
+                <div class="step sub-process" data-id="enc-preselect">Codeword Pre-selection (g<sub>φm</sub>) <br> (Select K' candidates)</div>
+                <div class="step sub-process" data-id="enc-beam">Beam Search <br> (Select B best sequences)</div>
+            </div>
+            <div class="arrow"></div>
+            
+            <div class="step sub-process" data-id="enc-select-cw">Select best Codeword C<sub>m</sub></div>
+            <div class="arrow"></div>
+            
+            <div class="step sub-process" data-id="enc-reconstruct-temp">Temporary Reconstruction X̂<sub>m</sub></div>
+        </div>
+        <div class="arrow"></div>
+        
+        <div class="step input-output" data-id="enc-output">Final Codeword Sequence (C<sub>1</sub>, ..., C<sub>M</sub>)</div>
+        <div class="dashed-line"></div>
+        <div class="step process" data-id="enc-train">Train Neural Networks (f<sub>θm</sub>, g<sub>φm</sub>) <br> (Optimize MSE between X and X̂<sub>M</sub>)</div>
+    </div>
+
+    <div class="flowchart-container">
+        <h2 class="flowchart-title">QINCO2 Nearest Neighbor Search Process</h2>
+
+        <div class="horizontal-group">
+            <div class="flowchart-column" style="flex:1; padding-right: 10px; border-right: 2px solid #e5e7eb;">
+                <h3 style="text-align:center; font-weight: 600; color: #4b5563; margin-bottom:10px;">Offline Stage (Preparation)</h3>
+                <div class="step input-output" data-id="search-db">Database Vectors X</div>
+                <div class="arrow"></div>
+                <div class="step process" data-id="search-encode">Encode with QINCO2</div>
+                <div class="arrow"></div>
+                <div class="step" data-id="search-store-ivf">Store Codes & Create IVF Index (using I<sup>0</sup>)</div>
+                <div class="arrow"></div>
+                <div class="step" data-id="search-train-approx">Train Approximate Decoders: <br>1. Simple AQ <br>2. Pairwise Additive Codeword Decoding</div>
+            </div>
+
+            <div class="flowchart-column" style="flex:1; padding-left: 10px;">
+                <h3 style="text-align:center; font-weight: 600; color: #4b5563; margin-bottom:10px;">Online Stage (Query Time)</h3>
+                <div class="step input-output" data-id="search-query">Query Vector Q</div>
+                <div class="arrow"></div>
+                <div class="step process" data-id="search-ivf">1. IVF Search (using I<sup>0</sup> of Q)</div>
+                <div class="arrow"></div>
+                <div class="step sub-process" data-id="search-s-ivf">Shortlist S<sub>IVF</sub> (N<sub>probe</sub> nearest "buckets")</div>
+                <div class="arrow"></div>
+                <div class="step process" data-id="search-aq-filter">2. Filter with Additive Quantization (AQ) Decoding</div>
+                <div class="arrow"></div>
+                <div class="step sub-process" data-id="search-s-aq">Shortlist S<sub>AQ</sub> (smaller)</div>
+                <div class="arrow"></div>
+                <div class="step process" data-id="search-pairwise-filter">3. Filter with Pairwise Additive Decoding</div>
+                <div class="arrow"></div>
+                <div class="step sub-process" data-id="search-s-pairs">Shortlist S<sub>pairs</sub> (smaller, more accurate)</div>
+                <div class="arrow"></div>
+                <div class="step process" data-id="search-full-decode">4. Full QINCO2 Decoding (only on S<sub>pairs</sub>)</div>
+                <div class="arrow"></div>
+                <div class="step input-output" data-id="search-results">Rank & Return K Nearest Neighbors</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Get modal elements
+    const modal = document.getElementById('detailModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalExample = document.getElementById('modalExample');
+    const closeButton = document.getElementsByClassName('close-button')[0];
+
+    // Node details and examples
+    const nodeDetails = {
+        // Encoding Process
+        'enc-input': {
+            title: 'Input Vector X',
+            description: "This is the initial data point we want to compress. It's represented as a list of numbers (a vector) that captures the features of an item, like an image or a song.",
+            example: "Imagine describing a cat's color (Red=10, Green=50, Blue=200), fur length (7/10), and ear pointiness (9/10). The vector could be <code>[10, 50, 200, 0.7, 0.9]</code>."
+        },
+        'enc-loop': {
+            title: 'Iterative Quantization (M Steps)',
+            description: "Instead of compressing all at once, QINCO2 does it in 'M' small steps. Each step refines the compression. This entire block represents that iterative process.",
+            example: "If M=4, the process inside this dashed box repeats 4 times, getting more detailed with each step."
+        },
+        'enc-step-m': {
+            title: "Step 'm'",
+            description: "This represents one of the 'M' refinement steps in the encoding process.",
+            example: "For example, if M=4, this could be Step 1, then Step 2, then Step 3, then Step 4."
+        },
+        'enc-residual': {
+            title: 'Calculate Residual R<sub>m</sub> = X - X̂<sub>m-1</sub>',
+            description: "The 'residual' is the error or the part of the original vector that wasn't perfectly captured by the previous steps (X̂<sub>m-1</sub>). We focus on compressing this remaining difference in the current step.",
+            example: "If original X = <code>[10, 20]</code> and after step 1, X̂<sub>1</sub> = <code>[8, 22]</code>. Then Residual R<sub>2</sub> for step 2 is X - X̂<sub>1</sub> = <code>[10-8, 20-22]</code> = <code>[2, -2]</code>. Step 2 will try to encode this <code>[2, -2]</code>."
+        },
+        'enc-nn': {
+            title: 'Neural Network f<sub>θm</sub> (adapts to X̂<sub>m-1</sub>)',
+            description: "A smart AI (neural network) that learns to generate the best 'codewords' (compressed representations) for the current residual. It's 'adaptive' because its behavior can change based on what has already been compressed from previous steps (X̂<sub>m-1</sub>).",
+            example: "The AI might learn that if the previous step (X̂<sub>m-1</sub>) captured 'general shape', this step 'm' should focus on 'fine texture details' for the remaining error (residual)."
+        },
+        'enc-preselect': {
+            title: "Codeword Pre-selection (g<sub>φm</sub>) (Select K' candidates)",
+            description: "A quick filtering mechanism. Before the main Neural Network (f<sub>θm</sub>) does heavy work, this simpler function (g<sub>φm</sub>) rapidly selects a small list of the most promising 'codewords' (K' candidates) from a larger dictionary. This saves computation.",
+            example: "From a total of 1000 possible codewords in the dictionary for this step, this pre-selection might quickly pick the best K'=16 candidates that seem most relevant to the current residual."
+        },
+        'enc-beam': {
+            title: 'Beam Search (Select B best sequences)',
+            description: "Instead of just picking the single best codeword at this step (greedy approach), Beam Search explores several (B) promising 'paths' or sequences of codewords simultaneously. This helps find a better overall compression by looking ahead, rather than getting stuck with a locally good but globally suboptimal choice.",
+            example: "It might keep track of, say, B=8 different ways the data could have been compressed up to this point, and then explores how to best continue each of those 8 'beams' or paths."
+        },
+        'enc-select-cw': {
+            title: 'Select best Codeword C<sub>m</sub>',
+            description: "From the paths explored by Beam Search, the best individual codeword (C<sub>m</sub>) for the current step 'm' is chosen. This codeword represents the compressed version of the current residual.",
+            example: "After exploring multiple options with Beam Search, Codeword #75 is chosen as the best representation for the current residual at this step 'm'."
+        },
+        'enc-reconstruct-temp': {
+            title: 'Temporary Reconstruction X̂<sub>m</sub>',
+            description: "The vector is partially reconstructed using all the codewords chosen from step 1 up to the current step 'm'. This X̂<sub>m</sub> is our current best 'compressed sketch' of the original vector. It's used to calculate the residual for the next step (m+1).",
+            example: "X̂<sub>m</sub> = f<sub>θ1</sub>(C<sub>1</sub>|X) + f<sub>θ2</sub>(C<sub>2</sub>|X̂<sub>1</sub>) + ... + f<sub>θm</sub>(C<sub>m</sub>|X̂<sub>m-1</sub>). This is the accumulated reconstruction so far."
+        },
+        'enc-output': {
+            title: 'Final Codeword Sequence (C<sub>1</sub>, ..., C<sub>M</sub>)',
+            description: "This is the final compressed version of the input vector X. It's a sequence of M chosen codewords, one from each step of the iterative quantization.",
+            example: "If M=4, the final compressed code for vector X might be a sequence like <code>[Codeword_A_from_step1, Codeword_X_from_step2, Codeword_P_from_step3, Codeword_K_from_step4]</code>."
+        },
+        'enc-train': {
+            title: 'Train Neural Networks (f<sub>θm</sub>, g<sub>φm</sub>)',
+            description: "This is the learning phase for the AI models. The neural networks (f<sub>θm</sub> for generating codewords and g<sub>φm</sub> for pre-selection) are trained by comparing the original vector X with the final reconstructed vector X̂<sub>M</sub>. The goal is to adjust the networks' parameters to make the reconstruction as close as possible to the original (minimize Mean Squared Error - MSE).",
+            example: "The system processes thousands or millions of example vectors. For each, it calculates the error between original and reconstruction, then slightly adjusts its AI models to reduce this error in the future. This is like a student learning from mistakes."
+        },
+
+        // Search Process
+        'search-db': {
+            title: 'Database Vectors X',
+            description: "The entire collection of data items (e.g., millions of images, songs, or product descriptions) that we want to search through. Each item is represented as a numerical vector.",
+            example: "A digital library containing feature vectors for 1 billion images."
+        },
+        'search-encode': {
+            title: 'Encode with QINCO2',
+            description: "All vectors in the database are compressed using the QINCO2 encoding process (as described in the first flowchart). This converts each high-dimensional vector into a compact QINCO2 code.",
+            example: "Each of the 1 billion image vectors is transformed into a short sequence of QINCO2 codewords (e.g., a 16-byte code)."
+        },
+        'search-store-ivf': {
+            title: 'Store Codes & Create IVF Index (using I<sup>0</sup>)',
+            description: "The compressed QINCO2 codes are stored efficiently. An Inverted File Index (IVF) is also built. The first part of each QINCO2 code (denoted I<sup>0</sup>, which is the codeword from the very first quantization step) is used to assign the code to a 'bucket' or 'list' in the IVF. Codes with similar I<sup>0</sup> go into the same bucket.",
+            example: "If I<sup>0</sup> can take 256 values, the IVF will have 256 buckets. All database codes whose first codeword was, say, Codeword #5, will be listed in bucket #5. This helps quickly narrow down the search later."
+        },
+        'search-train-approx': {
+            title: 'Train Approximate Decoders',
+            description: "To speed up the search process significantly, QINCO2 trains faster, less precise 'shortcut' decoders. These are: <br>1. <b>Simple AQ (Additive Quantization) Decoder:</b> Estimates distance by looking at parts of the code independently. <br>2. <b>Pairwise Additive Codeword Decoder:</b> A more sophisticated fast decoder that considers pairs of QINCO2 codewords together for a more accurate (but still fast) distance estimation.",
+            example: "These decoders are like quick estimators. Simple AQ is very fast but rough. The Pairwise decoder is like a slightly slower but more accurate assistant for quickly filtering candidates before using the full, slow QINCO2 decoder."
+        },
+        'search-query': {
+            title: 'Query Vector Q',
+            description: "The new item (e.g., an image you upload, a song you're listening to) for which you want to find similar items in the database. This is also represented as a vector.",
+            example: "You upload a picture of your specific cat (Vector Q), and you want to find pictures of similar-looking cats from the database."
+        },
+        'search-ivf': {
+            title: '1. IVF Search (using I<sup>0</sup> of Q)',
+            description: "First, the query vector Q is also encoded with QINCO2 to get its code, including its first codeword I<sup>0</sup><sub>Q</sub>. QINCO2 then uses I<sup>0</sup><sub>Q</sub> to quickly identify a few relevant 'buckets' (N<sub>probe</sub> buckets) in the IVF index. Only codes within these buckets will be considered initially.",
+            example: "If I<sup>0</sup> of your query cat picture's code is 'Cat_Type_A', the system looks into the IVF buckets corresponding to 'Cat_Type_A' and perhaps a few nearby types (e.g., N<sub>probe</sub>=5 buckets)."
+        },
+        'search-s-ivf': {
+            title: 'Shortlist S<sub>IVF</sub> (N<sub>probe</sub> nearest "buckets")',
+            description: "This is the initial list of candidate codes retrieved from the selected IVF buckets. It's still potentially large but significantly smaller than the entire database.",
+            example: "This might result in an initial list of, say, 100,000 candidate codes from the selected buckets."
+        },
+        'search-aq-filter': {
+            title: '2. Filter with Additive Quantization (AQ) Decoding',
+            description: "The simple and very fast AQ approximate decoder is used to quickly estimate the distances between the query vector Q and all the candidate codes in S<sub>IVF</sub>. Many less relevant codes are filtered out based on this rough estimation.",
+            example: "The 100,000 candidates from S<sub>IVF</sub> are quickly re-ranked using AQ distances, and this list might be reduced to the top 5,000 candidates (S<sub>AQ</sub>)."
+        },
+        'search-s-aq': {
+            title: 'Shortlist S<sub>AQ</sub> (smaller)',
+            description: "A smaller, more refined list of candidate codes after the initial AQ filtering stage.",
+            example: "The list now contains 5,000 promising codes that passed the quick AQ check."
+        },
+        'search-pairwise-filter': {
+            title: '3. Filter with Pairwise Additive Decoding',
+            description: "The more accurate (but still relatively fast) pairwise additive decoder further refines the shortlist S<sub>AQ</sub>. It provides better distance estimations than simple AQ by considering dependencies between pairs of codewords in the QINCO2 codes. This produces an even smaller and higher-quality shortlist.",
+            example: "The 5,000 candidates in S<sub>AQ</sub> are re-ranked using the pairwise decoder, and this might further reduce the list to the top 200 very strong candidates (S<sub>pairs</sub>)."
+        },
+        'search-s-pairs': {
+            title: 'Shortlist S<sub>pairs</sub> (smaller, more accurate)',
+            description: "A very small and highly relevant list of candidate codes that have passed both the AQ and the pairwise additive decoding filters.",
+            example: "The list now contains just the 200 most promising candidate codes."
+        },
+        'search-full-decode': {
+            title: '4. Full QINCO2 Decoding (only on S<sub>pairs</sub>)',
+            description: "Only for the very few codes remaining in the S<sub>pairs</sub> shortlist, the full, accurate (but computationally more expensive) QINCO2 decoder (the neural network f<sub>θm</sub>) is used to compute the exact distances to the query vector Q.",
+            example: "The 200 codes in S<sub>pairs</sub> are fully decoded, and their precise similarity to your query cat picture (Vector Q) is calculated."
+        },
+        'search-results': {
+            title: 'Rank & Return K Nearest Neighbors',
+            description: "The candidates from S<sub>pairs</sub>, now with their exact distances to Q, are ranked from most similar to least similar. The top K closest items (where K is the desired number of results, e.g., K=10) are returned as the final search results.",
+            example: "The 10 most similar cat pictures (K=10) from the database are shown to you as the search results."
+        }
+    };
+
+    // Function to display modal
+    function showModal(nodeId) {
+        const details = nodeDetails[nodeId];
+        if (details) {
+            modalTitle.innerHTML = details.title; // Use innerHTML to render subscripts
+            modalDescription.textContent = details.description.replace(/<br\s*\/?>/gi, '\n'); // Replace <br> with newlines for textContent
+            modalExample.innerHTML = details.example; // Use innerHTML for code tags and other HTML
+            modal.style.display = "block";
+        }
+    }
+
+    // Add click listeners to all steps
+    document.querySelectorAll('.step, .loop-container').forEach(step => {
+        step.addEventListener('click', function() {
+            const nodeId = this.dataset.id;
+            if (nodeId) {
+                showModal(nodeId);
+            } else if (this.classList.contains('loop-container')) { // Special case for loop container itself
+                 showModal('enc-loop');
+            }
+        });
+    });
+
+    // Close modal when clicking on (x)
+    closeButton.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+</script>
+
+</body>
+</html>
