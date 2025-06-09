@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workshop: A Data-Driven Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .slide {
+            display: none;
+            animation: fadeIn 0.7s ease-in-out;
+        }
+        .slide.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+        .nav-button {
+            transition: all 0.2s ease;
+        }
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .chart-container {
+            position: relative;
+            height: 45vh;
+            width: 100%;
+            max-height: 480px;
+            margin-top: 1rem;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #cbd5e1;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #f1f5f9;
+        }
+        .comparison-table .feature-col {
+            font-weight: 600;
+        }
+        .comparison-table .check {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .comparison-table .cross {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header & Progress Bar -->
+        <header class="mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-teal-700 mb-4">AI Workshop: A Data-Driven Deep Dive</h1>
+            <div class="w-full bg-slate-300 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-teal-600 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <div id="progress-label" class="text-center text-sm text-slate-600 mt-2">Part 1/15</div>
+        </header>
+
+        <!-- Slides Container -->
+        <main id="slides-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-xl min-h-[65vh] flex flex-col justify-center">
+            
+            <!-- Slide 1: Welcome -->
+            <section class="slide" data-title="Welcome">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">Welcome to the AI Era!</h2>
+                <p class="text-lg text-slate-600 mb-6">Today, we move from just using AI to truly understanding and mastering it.</p>
+                <div class="prose max-w-none text-slate-700">
+                    <p>This workshop is an intensive deep-dive designed to equip you with the practical skills and evidence-based knowledge to leverage AI effectively. We will focus on two core areas: advanced **Prompt Engineering** and a strategic breakdown of the best **AI tools for academic and professional tasks.**</p>
+                    <p>All data and claims presented today are sourced from industry-leading reports and academic benchmarks.</p>
+                </div>
+                <div class="mt-8 p-4 bg-teal-50 border-l-4 border-teal-500 rounded-r-lg">
+                    <p class="text-teal-800 font-semibold">Our Goal: To develop a sophisticated, critical, and data-driven approach to using AI.</p>
+                </div>
+            </section>
+
+            <!-- Slide 2: AI's Growth -->
+            <section class="slide" data-title="The Scale of AI">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">The Unprecedented Scale of Modern AI</h2>
+                <p class="text-lg text-slate-600 mb-6">The computational power used to train top AI models has been doubling approximately every 6 months—a rate far surpassing Moore's Law.</p>
+                <div class="chart-container">
+                    <canvas id="trainingComputeChart"></canvas>
+                </div>
+                <p class="text-xs text-center mt-2 text-slate-500">Source: Data adapted from Stanford University's 2024 AI Index Report. This shows the dramatic increase in training compute for landmark models.</p>
+            </section>
+            
+            <!-- Slide 3: How It Works -->
+            <section class="slide" data-title="How It Works">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">How Does It "Think"? A Quick Recap</h2>
+                <p class="text-lg text-slate-600 mb-6">It's a powerful pattern-matching machine. It doesn't understand; it predicts the most probable next word based on context.</p>
+                <div class="text-center bg-slate-50 p-6 rounded-xl my-6">
+                    <p class="text-slate-700 mb-2">The core technology, the <strong>Transformer architecture</strong>, allows AI to weigh the importance of different words in the input to generate relevant and coherent text.</p>
+                    <p class="mt-4 font-semibold text-teal-700">This means the quality of your input (prompt) directly controls the quality and relevance of its probabilistic output.</p>
+                </div>
+            </section>
+
+            <!-- Slide 4: Intro to Prompting -->
+            <section class="slide" data-title="Intro to Prompting">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">Core Skill: From Conversation to Instruction</h2>
+                <p class="text-lg text-slate-600 mb-6">Effective prompting is the art of giving clear, context-rich instructions to an AI. Let's start with foundational techniques.</p>
+                <div class="grid md:grid-cols-2 gap-6 mt-4">
+                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                        <h3 class="font-bold text-xl text-blue-800 mb-2">Zero-Shot Prompting</h3>
+                        <p class="text-slate-700">A direct instruction without any prior examples.</p>
+                        <p class="font-mono bg-slate-100 p-2 rounded mt-2 text-sm">Classify this text into 'Positive', 'Negative', or 'Neutral': "The movie was okay, but the ending was disappointing."</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                        <h3 class="font-bold text-xl text-green-800 mb-2">Few-Shot Prompting</h3>
+                        <p class="text-slate-700">Providing a few examples (shots) to guide the AI's output format and logic.</p>
+                        <p class="font-mono bg-slate-100 p-2 rounded mt-2 text-sm">Text: "I loved the new phone!" -> Sentiment: Positive.<br>Text: "The delivery was late." -> Sentiment: Negative.<br>Text: "The product works as advertised." -> Sentiment: ?</p>
+                    </div>
+                </div>
+                <p class="mt-4 text-center font-semibold">Few-shot prompting significantly improves accuracy for specific, nuanced tasks.</p>
+            </section>
+
+            <!-- Slide 5: Chain of Thought -->
+            <section class="slide" data-title="Chain-of-Thought Prompting">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">Advanced Technique: Chain-of-Thought (CoT)</h2>
+                <p class="text-lg text-slate-600 mb-6">For complex reasoning tasks, asking the AI to "think step-by-step" dramatically improves its accuracy by forcing it to detail its reasoning process.</p>
+                 <div class="mt-6 grid md:grid-cols-2 gap-4">
+                     <div class="bg-slate-50 p-4 rounded-lg">
+                         <h4 class="font-semibold text-red-600 mb-2">Standard Prompt 👎</h4>
+                         <p class="text-sm text-slate-700">Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now?</p>
+                         <p class="font-mono bg-red-100 p-2 rounded mt-2 text-sm">Answer: 11.</p>
+                         <p class="text-xs mt-2 text-red-700">The AI might get this wrong by simply adding 5+2+3.</p>
+                     </div>
+                     <div class="bg-slate-50 p-4 rounded-lg">
+                         <h4 class="font-semibold text-green-600 mb-2">Chain-of-Thought Prompt 👍</h4>
+                         <p class="text-sm text-slate-700">Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now? <strong>Let's think step by step.</strong></p>
+                         <p class="font-mono bg-green-50 p-2 rounded mt-2 text-sm">Answer: First, calculate the number of balls in the cans. 2 cans * 3 balls/can = 6 balls. Then, add this to the 5 balls Roger already had. 5 + 6 = 11 balls. The answer is 11.</p>
+                     </div>
+                 </div>
+            </section>
+            
+            <!-- Slide 6: CRAFT Framework -->
+            <section class="slide" data-title="The C.R.A.F.T. Framework">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">A Practical Framework: C.R.A.F.T.</h2>
+                <p class="text-lg text-slate-600 mb-6">Combine techniques into a powerful structure for consistent, high-quality results.</p>
+                 <div class="space-y-3 text-slate-800">
+                    <p><strong class="text-teal-600">C - Context:</strong> Provide background information. What does the AI need to know?</p>
+                    <p><strong class="text-teal-600">R - Role:</strong> Assign a persona. "Act as a..."</p>
+                    <p><strong class="text-teal-600">A - Action:</strong> The specific verb for the task. Analyze, summarize, compare, create, critique...</p>
+                    <p><strong class="text-teal-600">F - Format:</strong> Specify the output structure. Table, bullet points, JSON, email...</p>
+                    <p><strong class="text-teal-600">T - Tone:</strong> Define the writing style. Formal, casual, professional, empathetic...</p>
+                 </div>
+            </section>
+            
+            <!-- Slide 7: Prompt Practice -->
+            <section class="slide" data-title="Workshop Activity: Prompt Practice">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">Workshop Activity: Let's Build a Prompt</h2>
+                <p class="text-lg text-slate-600 mb-6">Choose the scenario for your major. Use the C.R.A.F.T. framework to write the best possible prompt in your notebook or a text editor.</p>
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold text-indigo-700">For Business/Marketing Students:</h3>
+                        <p class="text-sm"><strong>Scenario:</strong> You need to propose 3 new features for the Gogoro mobile app to improve user engagement.</p>
+                    </div>
+                     <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold text-green-700">For Engineering/CS Students:</h3>
+                        <p class="text-sm"><strong>Scenario:</strong> You have a Python script that isn't working. You need the AI to not only fix it but also explain the logic and suggest efficiency improvements.</p>
+                    </div>
+                     <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold text-sky-700">For Humanities/Social Science Students:</h3>
+                        <p class="text-sm"><strong>Scenario:</strong> You have a dense academic text by Michel Foucault. You need a summary that is accessible to a first-year student, highlighting the main argument and its key supporting points.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 8: Toolkit Intro -->
+            <section class="slide" data-title="AI Toolkit Intro">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">The Modern Student's AI Toolkit</h2>
+                <p class="text-lg text-slate-600 mb-6">Let's move beyond general chatbots and look at specialized tools designed for specific academic tasks.</p>
+                 <p class="prose max-w-none text-slate-700">We will analyze tools for four key areas:
+                    <ol>
+                        <li>Academic Research</li>
+                        <li>Advanced Writing & Editing</li>
+                        <li>Data Analysis & Coding</li>
+                        <li>Presentations & Visuals</li>
+                    </ol>
+                </p>
+            </section>
+
+             <!-- Slide 9: Toolkit - Research -->
+            <section class="slide" data-title="Tools for Research">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Toolkit: AI for Academic Research</h2>
+                <p class="text-slate-600 mb-4">These tools help you find papers, extract information, and understand complex topics faster.</p>
+                <table class="comparison-table">
+                    <thead>
+                        <tr><th>Feature</th><th>Elicit</th><th>Scite.ai</th><th>Consensus</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="feature-col">Core Function</td><td>Finds papers based on a question, extracts key data</td><td>Shows how papers have been cited (supporting, contradicting)</td><td>Finds answers to yes/no questions from research</td></tr>
+                        <tr><td class="feature-col">Best For</td><td>Literature reviews & data extraction</td><td>Evaluating a paper's impact & credibility</td><td>Quickly getting a research-backed consensus</td></tr>
+                        <tr><td class="feature-col">"Smart Citations"</td><td class="cross">No</td><td class="check">Yes</td><td class="check">Yes</td></tr>
+                        <tr><td class="feature-col">Summarizes Abstracts</td><td class="check">Yes</td><td class="check">Yes</td><td class="check">Yes</td></tr>
+                    </tbody>
+                </table>
+                 <p class="mt-4 text-sm text-slate-500"><strong>Recommendation:</strong> Start with <strong>Consensus</strong> for quick answers. Use <strong>Elicit</strong> for deep literature reviews. Use <strong>Scite.ai</strong> before citing a critical paper.</p>
+            </section>
+            
+            <!-- Slide 10: Toolkit - Writing -->
+            <section class="slide" data-title="Tools for Writing">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Toolkit: Advanced Writing & Editing</h2>
+                <p class="text-slate-600 mb-4">Go beyond simple grammar checks to improve style, tone, and clarity.</p>
+                <table class="comparison-table">
+                    <thead>
+                        <tr><th>Feature</th><th>Grammarly Premium</th><th>QuillBot Premium</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="feature-col">Core Function</td><td>Grammar, style, tone, and plagiarism detection.</td><td>Advanced paraphrasing, summarization, and citation generation.</td></tr>
+                        <tr><td class="feature-col">Best For</td><td>Final proofreading and ensuring academic integrity.</td><td>Rewriting sentences for clarity and avoiding repetition.</td></tr>
+                        <tr><td class="feature-col">Paraphrasing Modes</td><td class="cross">No</td><td class="check">Multiple (Formal, Creative, etc.)</td></tr>
+                        <tr><td class="feature-col">Plagiarism Checker</td><td class="check">Yes</td><td class="check">Yes (limited)</td></tr>
+                        <tr><td class="feature-col">Citation Generator</td><td class="cross">No</td><td class="check">Yes</td></tr>
+                    </tbody>
+                </table>
+                 <p class="mt-4 text-sm text-slate-500"><strong>Recommendation:</strong> Use <strong>QuillBot</strong> during the drafting process to refine your sentences. Use <strong>Grammarly</strong> as the final check before submission.</p>
+            </section>
+            
+             <!-- Slide 11: Toolkit - Data/Code -->
+            <section class="slide" data-title="Tools for Data & Code">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Toolkit: Data Analysis & Coding</h2>
+                <p class="text-slate-600 mb-4">These tools can write code, analyze data files, and create visualizations from natural language.</p>
+                <div class="bg-white p-6 rounded-lg border">
+                    <h3 class="font-semibold text-xl text-green-700 mb-3">ChatGPT (Advanced Data Analysis) & Claude</h3>
+                    <ul class="list-disc list-inside space-y-2 text-slate-700">
+                        <li><strong>What it is:</strong> An environment within a chatbot that lets you upload files (CSV, Excel, images) and have the AI run Python code to analyze them.</li>
+                        <li><strong>Key Capabilities:</strong>
+                            <ul class="list-['-_'] list-inside ml-4">
+                                <li>Clean and process datasets.</li>
+                                <li>Perform statistical analysis.</li>
+                                <li>Generate complex charts and graphs.</li>
+                                <li>Solve quantitative problems.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Prompt Example:</strong> "Here is a CSV of my survey data. Please perform a correlation analysis between 'hours_studied' and 'final_grade', and generate a scatter plot to visualize the relationship."</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Slide 12: Responsible AI -->
+            <section class="slide" data-title="Responsible Use">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Responsible & Ethical Use</h2>
+                <p class="text-lg text-slate-600 mb-6">With great power comes great responsibility. Understand the ethical landscape.</p>
+                <div class="prose max-w-none text-slate-700">
+                     <ul>
+                         <li><strong>Academic Integrity:</strong> AI is a tool, not an author. Citing AI-generated text is a complex and evolving issue. <strong>Always follow your university's specific policy.</strong> When in doubt, don't submit AI writing as your own.</li>
+                         <li><strong>Data Privacy:</strong> Do not upload sensitive personal, financial, or proprietary data to public AI tools. Assume your conversations can be used for training.</li>
+                         <li><strong>Misinformation & Deepfakes:</strong> Be a critical consumer of information. Use your judgment to identify content that seems biased or manipulative. AI makes creating convincing fake content easier than ever.</li>
+                     </ul>
+                </div>
+            </section>
+
+            <!-- Slide 13: Future -->
+            <section class="slide" data-title="The Future">
+                 <h2 class="text-3xl font-bold text-slate-800 mb-6">AI and Your Future Career</h2>
+                 <p class="text-lg text-slate-600 mb-6">The demand is shifting from performing tasks to defining problems and leveraging tools to solve them.</p>
+                 <div class="chart-container">
+      
