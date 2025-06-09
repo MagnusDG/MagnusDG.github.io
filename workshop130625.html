@@ -277,4 +277,178 @@
                  <h2 class="text-3xl font-bold text-slate-800 mb-6">AI and Your Future Career</h2>
                  <p class="text-lg text-slate-600 mb-6">The demand is shifting from performing tasks to defining problems and leveraging tools to solve them.</p>
                  <div class="chart-container">
-      
+                    <canvas id="skillsChart"></canvas>
+                </div>
+                 <p class="text-xs text-center mt-2 text-slate-500">Source: Adapted from World Economic Forum "Future of Jobs" report. Illustrates the rising importance of analytical and creative skills.</p>
+            </section>
+            
+            <!-- Slide 14: Learning Resources -->
+            <section class="slide" data-title="Learning Resources">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Keep Learning: Your AI Resources</h2>
+                <p class="text-lg text-slate-600 mb-6">The field changes weekly. Staying curious is your best asset.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-xl mb-2">Newsletters & Blogs</h3>
+                        <ul class="list-disc list-inside">
+                            <li><strong>The Neuron:</strong> Daily updates on AI news.</li>
+                            <li><strong>Ben's Bites:</strong> A curated list of what's new in AI.</li>
+                            <li><strong>AI Index Report (Stanford):</strong> The definitive annual report on AI trends.</li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h3 class="font-semibold text-xl mb-2">Courses & Channels</h3>
+                        <ul class="list-disc list-inside">
+                             <li><strong>"AI for Everyone" by Andrew Ng (Coursera):</strong> Best non-technical introduction.</li>
+                            <li><strong>"Elements of AI" (University of Helsinki):</strong> Free, comprehensive course.</li>
+                            <li><strong>Two Minute Papers (YouTube):</strong> Quick summaries of the latest research papers.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 15: Q&A -->
+            <section class="slide" data-title="Q&A">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">Q&A and Final Thoughts</h2>
+                <p class="text-lg text-slate-600 mb-6">Now it's time for your questions!</p>
+                <div class="bg-teal-50 p-6 rounded-xl border-l-4 border-teal-500">
+                    <h3 class="text-xl font-bold text-teal-800 mb-3">Key Takeaways:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-teal-900">
+                        <li>Mastering AI is about **instruction and critical evaluation**, not just conversation.</li>
+                        <li>Use **specialized tools** for high-stakes tasks like research and writing.</li>
+                        <li>Your greatest value in an AI-powered world is your **judgment, creativity, and ethical compass.**</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <!-- Navigation -->
+        <footer class="mt-8 flex justify-between items-center">
+            <button id="prev-btn" class="nav-button bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold py-2 px-4 rounded-lg">
+                &larr; Prev
+            </button>
+            <button id="next-btn" class="nav-button bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg">
+                Next &rarr;
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressLabel = document.getElementById('progress-label');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+            const charts = {};
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                updateProgress(index);
+                updateNavButtons(index);
+                currentSlide = index;
+
+                // Lazy load charts
+                if (index === 1 && !charts.compute) createTrainingComputeChart();
+                if (index === 12 && !charts.skills) createSkillsChart();
+            }
+
+            function updateProgress(index) {
+                const percentage = ((index + 1) / totalSlides) * 100;
+                progressBar.style.width = `${percentage}%`;
+                const slideTitle = slides[index].dataset.title || `Part ${index + 1}`;
+                progressLabel.textContent = `${slideTitle} (${index + 1}/${totalSlides})`;
+            }
+
+            function updateNavButtons(index) {
+                prevBtn.disabled = index === 0;
+                if (index === totalSlides - 1) {
+                    nextBtn.textContent = 'Finish 🎉';
+                } else {
+                    nextBtn.textContent = 'Next →';
+                }
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                } else {
+                    alert('Thank you for completing the workshop!');
+                }
+            });
+            
+            function createTrainingComputeChart() {
+                const ctx = document.getElementById('trainingComputeChart').getContext('2d');
+                charts.compute = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['2017 (Transformer)', '2018 (GPT-1)', '2019 (GPT-2)', '2020 (GPT-3)', '2022 (PaLM)', '2023 (GPT-4)'],
+                        datasets: [{
+                            label: 'Training Compute (petaFLOPs) - Log Scale',
+                            data: [0.0007, 0.05, 1.5, 314, 2560, 21000], 
+                            borderColor: '#0d9488',
+                            backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                type: 'logarithmic',
+                                title: { display: true, text: 'petaFLOPs' }
+                            },
+                            x: {
+                                title: { display: true, text: 'Model Release Year' }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function createSkillsChart() {
+                 const ctx = document.getElementById('skillsChart').getContext('2d');
+                 charts.skills = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Analytical thinking', 'Creative thinking', 'Technological literacy', 'Curiosity & lifelong learning', 'Resilience & flexibility'],
+                        datasets: [{
+                            label: 'Growing Importance of Skills by 2027',
+                            data: [86, 73, 65, 63, 60],
+                            backgroundColor: ['#14b8a6', '#0ea5e9', '#6366f1', '#f97316', '#a855f7'],
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: { display: true, text: '% of companies reporting skill as core'}
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // Initialize
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>
