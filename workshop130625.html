@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Workshop: From Fundamentals to Mastery</title>
+    <title>AI Workshop: Data-Enhanced Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,24 +38,44 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .chart-container {
+            position: relative;
+            height: 55vh;
+            width: 100%;
+            max-height: 450px;
+            margin-top: 1.5rem;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 1rem;
+            margin-top: 1.5rem;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
     <div class="max-w-6xl mx-auto p-4 sm:p-8">
-        <!-- Header & Progress Bar -->
         <header class="mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">AI Workshop: From Fundamentals to Mastery</h1>
             <div class="w-full bg-slate-200 rounded-full h-2.5">
                 <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
             </div>
-            <div id="progress-label" class="text-center text-sm text-slate-600 mt-2">Part 1/12</div>
+            <div id="progress-label" class="text-center text-sm text-slate-600 mt-2">Part 1/15</div>
         </header>
 
-        <!-- Slides Container -->
         <main id="slides-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
             
-            <!-- Slide 1: Welcome -->
             <section class="slide" data-title="Welcome">
                 <h2 class="text-4xl font-bold text-indigo-700 mb-4">Welcome!</h2>
                 <p class="text-xl text-slate-600 mb-6">Let's learn how to turn Large Language Models from a simple tool into a powerful intellectual partner.</p>
@@ -63,7 +84,6 @@
                 </div>
             </section>
 
-            <!-- Slide 2: What is AI? -->
             <section class="slide" data-title="What is AI?">
                 <h2 class="text-3xl font-bold mb-6">What Are We Talking About?</h2>
                 <div class="grid md:grid-cols-3 gap-6 text-center">
@@ -83,18 +103,33 @@
                 <p class="mt-8 text-center text-slate-600">Popular Models: <strong class="font-semibold">GPT series (OpenAI)</strong>, <strong class="font-semibold">Claude series (Anthropic)</strong>, <strong class="font-semibold">Gemini (Google)</strong>.</p>
             </section>
             
-            <!-- Slide 3: How LLMs Work -->
-            <section class="slide" data-title="How LLMs Work">
-                <h2 class="text-3xl font-bold mb-6">How an LLM *Really* Works</h2>
-                <p class="text-xl text-slate-600 mb-6">It's not magic. It's a sophisticated <strong class="text-indigo-600">word prediction game</strong>.</p>
-                <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
-                   <p>1. <strong>It learns relationships:</strong> By reading billions of texts, the LLM learns that the word "sky" is often related to "blue," "clouds," and "sun," but rarely to "submarine."</p>
-                   <p>2. <strong>It weighs context:</strong> When you give it a prompt, it pays "attention" to the key words. In the sentence "The capital of Taiwan is ___," it knows "capital" and "Taiwan" are the most important clues.</p>
-                   <p>3. <strong>It predicts the next word:</strong> Based on the clues and the relationships it has learned, it calculates the most statistically probable word to come next. It's not "thinking," it's calculating.</p>
+            <section class="slide" data-title="The AI Boom">
+                <h2 class="text-3xl font-bold mb-2">The Global AI Boom is Real</h2>
+                <p class="text-lg text-slate-600 mb-6">Private investment in AI has surged, with Generative AI attracting the most funding.</p>
+                <div class="chart-container">
+                    <canvas id="aiInvestmentChart"></canvas>
                 </div>
+                <p class="text-xs text-center mt-2 text-slate-500">Source: Stanford University HAI, 2024 AI Index Report.</p>
             </section>
             
-            <!-- Slide 4: Maximizing Power -->
+            <section class="slide" data-title="How LLMs Work">
+                <h2 class="text-3xl font-bold mb-6">How an LLM *Really* Works</h2>
+                <p class="text-xl text-slate-600 mb-2">It's a sophisticated <strong class="text-indigo-600">word prediction game</strong>.</p>
+                <p class="text-slate-600 mb-6">By analyzing billions of texts, it learns the statistical relationships between words, allowing it to predict the most likely next word in any given sequence.</p>
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/zjkBMFhNj_g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </section>
+
+            <section class="slide" data-title="Performance Benchmarks">
+                <h2 class="text-3xl font-bold mb-2">Performance on Standard Benchmarks</h2>
+                <p class="text-lg text-slate-600 mb-6">Models are compared on benchmarks like MMLU, which measures multitask accuracy across 57 subjects.</p>
+                <div class="chart-container">
+                    <canvas id="mmluBenchmarkChart"></canvas>
+                </div>
+                <p class="text-xs text-center mt-2 text-slate-500">Source: Data compiled from official model release papers (e.g., Google, OpenAI).</p>
+            </section>
+
             <section class="slide" data-title="Maximizing Power">
                 <h2 class="text-3xl font-bold mb-6">How to Maximize an LLM's Power</h2>
                 <p class="text-xl text-slate-600 mb-6">Your goal is to reduce the AI's guesswork as much as possible.</p>
@@ -113,7 +148,6 @@
                 <p class="mt-8 text-center font-semibold">You are the director. The LLM is the actor. Give clear directions.</p>
             </section>
 
-            <!-- Slide 5: Core Prompting Techniques -->
             <section class="slide" data-title="Core Prompting Techniques">
                 <h2 class="text-3xl font-bold mb-6">Core Prompting Techniques</h2>
                 <div class="space-y-6">
@@ -130,7 +164,6 @@
                 </div>
             </section>
             
-            <!-- Slide 6: ROLES Framework -->
             <section class="slide" data-title="The R.O.L.E.S. Framework">
                 <h2 class="text-3xl font-bold mb-6">A Simple, Powerful Framework: R.O.L.E.S.</h2>
                 <p class="text-xl text-slate-600 mb-6">Use this structure to build excellent prompts every time.</p>
@@ -143,8 +176,7 @@
                  </div>
             </section>
             
-            <!-- Slide 7: Basic Applications -->
-            <section class="slide" data-title="Basic Applications">
+            <section class="slide" data-title="Advanced Applications">
                 <h2 class="text-3xl font-bold mb-6">Applications: From Basic to Advanced</h2>
                 <h3 class="text-2xl font-semibold text-indigo-600 mb-4">Level 1: The Information Assistant</h3>
                 <div class="space-y-6">
@@ -159,7 +191,6 @@
                 </div>
             </section>
             
-            <!-- Slide 8: Advanced Applications -->
             <section class="slide" data-title="Advanced Applications">
                 <h2 class="text-3xl font-bold mb-6">Level 2: The Thought Partner</h2>
                 <div class="space-y-6">
@@ -174,7 +205,6 @@
                 </div>
             </section>
 
-            <!-- Slide 9: Group Activity -->
             <section class="slide" data-title="Group Activity">
                 <h2 class="text-3xl font-bold mb-6">Group Activity: Put R.O.L.E.S. into Practice (15 mins)</h2>
                 <p class="text-xl text-slate-600 mb-6">In groups of 3-4, choose one scenario below and construct a detailed prompt using the R.O.L.E.S. framework. Be ready to share your prompt.</p>
@@ -193,23 +223,42 @@
                     </div>
                 </div>
             </section>
-
-            <!-- Slide 10: AI for Lifelong Learning -->
+            
             <section class="slide" data-title="AI for Lifelong Learning">
                 <h2 class="text-3xl font-bold mb-6">AI for Lifelong Learning & Research</h2>
                 <p class="text-xl text-slate-600 mb-6">AI is your ultimate learning companion.</p>
                 <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
-                    <p><strong>1. Become a Skill-Building Engine:</strong> Use AI to create learning plans for any skill you want to acquire.
-                    <br><em class="text-base">"I want to learn basic Python for data analysis. I know nothing about coding. Create a 4-week learning plan with daily topics, key concepts, and a small project for each week."</em></p>
-                    
+                    <p><strong>1. Become a Skill-Building Engine:</strong> Use AI to create learning plans for any skill you want to acquire.</p>
                     <p><strong>2. Use Specialized Tools for Research:</strong> For literature reviews, tools like <strong class="font-semibold">Elicit</strong> and <strong class="font-semibold">Consensus</strong> are more powerful than general chatbots because they are connected to databases of scientific papers.</p>
-                    
-                    <p><strong>3. Stay Updated:</strong> Ask AI to act as your personal intelligence analyst.
-                    <br><em class="text-base">"Summarize the top 5 most important developments in artificial intelligence from the past month. Explain why each is significant. Provide links to reliable sources."</em></p>
+                    <p><strong>3. Stay Updated:</strong> Ask AI to act as your personal intelligence analyst.</p>
                 </div>
             </section>
 
-            <!-- Slide 11: Responsible Use -->
+            <section class="slide" data-title="Learning Resources">
+                <h2 class="text-3xl font-bold mb-6">Your Learning Journey Continues</h2>
+                <p class="text-lg text-slate-600 mb-6">The field changes weekly. Staying curious is your best asset. Here are some resources to continue your learning.</p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-semibold text-xl mb-3 text-indigo-600">Essential Reading & Newsletters</h3>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li><strong>Book:</strong> "The Coming Wave" by Mustafa Suleyman - A great overview of AI's societal impact.</li>
+                            <li><strong>Book:</strong> "Superintelligence" by Nick Bostrom - A classic philosophical look at AI risks.</li>
+                            <li><strong>Newsletter:</strong> The Neuron - Daily, easy-to-read updates on AI.</li>
+                            <li><strong>Report:</strong> Stanford AI Index - The definitive annual report on AI trends.</li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h3 class="font-semibold text-xl mb-3 text-indigo-600">Recommended Courses</h3>
+                        <ul class="list-disc list-inside space-y-2">
+                             <li><strong>Coursera:</strong> "AI for Everyone" by Andrew Ng - The best non-technical introduction.</li>
+                             <li><strong>Coursera:</strong> "Generative AI for Everyone" by Andrew Ng - A follow-up focused on GenAI.</li>
+                             <li><strong>University of Helsinki:</strong> "Elements of AI" - A free, comprehensive course on AI fundamentals.</li>
+                             <li><strong>Vanderbilt University:</strong> "Prompt Engineering for ChatGPT" on Coursera.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
             <section class="slide" data-title="Responsible Use">
                 <h2 class="text-3xl font-bold mb-6">Final, Critical Rules for Responsible Use</h2>
                 <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
@@ -220,7 +269,6 @@
                 </div>
             </section>
             
-            <!-- Slide 12: Q&A -->
             <section class="slide" data-title="Q&A">
                 <h2 class="text-4xl font-bold text-indigo-700 mb-4">Q&A and Final Thoughts</h2>
                 <p class="text-xl text-slate-600">Your journey with AI starts now.</p>
@@ -231,7 +279,6 @@
             </section>
         </main>
 
-        <!-- Navigation -->
         <footer class="mt-8 flex justify-between items-center">
             <button id="prev-btn" class="nav-button bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg">
                 &larr; Prev
@@ -251,6 +298,7 @@
             const progressLabel = document.getElementById('progress-label');
             let currentSlide = 0;
             const totalSlides = slides.length;
+            const charts = {};
 
             function showSlide(index) {
                 slides.forEach((slide, i) => {
@@ -260,6 +308,9 @@
                 updateProgress(index);
                 updateNavButtons(index);
                 currentSlide = index;
+
+                if (index === 2 && !charts.investment) createInvestmentChart();
+                if (index === 4 && !charts.mmlu) createMMLUBenchmarkChart();
             }
 
             function updateProgress(index) {
@@ -291,6 +342,67 @@
                     alert('Workshop complete! Thank you for your participation.');
                 }
             });
+
+            function createInvestmentChart() {
+                const ctx = document.getElementById('aiInvestmentChart').getContext('2d');
+                charts.investment = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['2019', '2020', '2021', '2022', '2023'],
+                        datasets: [{
+                            label: 'Total Private Investment in AI ($B)',
+                            data: [71.7, 72.0, 102.7, 91.9, 95.8],
+                            backgroundColor: '#4f46e5',
+                        }, {
+                            label: 'Investment in Generative AI ($B)',
+                            data: [1.3, 1.4, 4.4, 4.5, 25.2],
+                            backgroundColor: '#a5b4fc',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'USD (Billions)'} },
+                            x: { title: { display: true, text: 'Year'} }
+                        }
+                    }
+                });
+            }
+
+            function createMMLUBenchmarkChart() {
+                const ctx = document.getElementById('mmluBenchmarkChart').getContext('2d');
+                 charts.mmlu = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['GPT-3.5 (Mar 2022)', 'GPT-4 (Mar 2023)', 'Claude 3 Opus (Mar 2024)', 'Gemini 1.5 Pro (Apr 2024)'],
+                        datasets: [{
+                            label: 'MMLU Score (%)',
+                            data: [70.0, 86.4, 86.8, 88.0],
+                            backgroundColor: [
+                                'rgba(107, 114, 128, 0.8)',
+                                'rgba(13, 148, 136, 0.8)',
+                                'rgba(217, 70, 239, 0.8)',
+                                'rgba(59, 130, 246, 0.8)'
+                            ],
+                            borderColor: '#374151',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                suggestedMin: 65,
+                                title: { display: true, text: 'Accuracy Score (%)'}
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
 
             // Initialize
             showSlide(0);
