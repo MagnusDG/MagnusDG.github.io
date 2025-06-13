@@ -66,6 +66,15 @@
             color: #ef4444;
             font-weight: bold;
         }
+        .attention-text span {
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .attention-text .highlight {
+            background-color: rgba(20, 184, 166, 0.4);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
@@ -77,7 +86,7 @@
             <div class="w-full bg-slate-300 rounded-full h-2.5">
                 <div id="progress-bar" class="bg-teal-600 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
             </div>
-            <div id="progress-label" class="text-center text-sm text-slate-600 mt-2">Part 1/15</div>
+            <div id="progress-label" class="text-center text-sm text-slate-600 mt-2">Part 1/16</div>
         </header>
 
         <!-- Slides Container -->
@@ -106,17 +115,77 @@
                 <p class="text-xs text-center mt-2 text-slate-500">Source: Data adapted from Stanford University's 2024 AI Index Report. This shows the dramatic increase in training compute for landmark models.</p>
             </section>
             
-            <!-- Slide 3: How It Works -->
-            <section class="slide" data-title="How It Works">
-                <h2 class="text-3xl font-bold text-slate-800 mb-4">How Does It "Think"? A Quick Recap</h2>
-                <p class="text-lg text-slate-600 mb-6">It's a powerful pattern-matching machine. It doesn't understand; it predicts the most probable next word based on context.</p>
-                <div class="text-center bg-slate-50 p-6 rounded-xl my-6">
-                    <p class="text-slate-700 mb-2">The core technology, the <strong>Transformer architecture</strong>, allows AI to weigh the importance of different words in the input to generate relevant and coherent text.</p>
-                    <p class="mt-4 font-semibold text-teal-700">This means the quality of your input (prompt) directly controls the quality and relevance of its probabilistic output.</p>
+            <!-- Slide 3: NEW INTUITIVE EXPLANATION -->
+            <section class="slide" data-title="How AI 'Understands'">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">How AI "Understands"</h2>
+                <p class="text-lg text-slate-600 mb-6">Imagine you're playing a story-finishing game. That's how AI works!</p>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-700 mb-2">Step 1: It Reads a GIANT Library 📚</h3>
+                        <p>The AI reads almost every book and website ever written. It doesn't "remember" facts, but it learns the **rules of language**—like how "cat" often appears with "meow" and "purr".</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-700 mb-2">Step 2: It Pays "Attention" to Key Words 🎯</h3>
+                        <p>When you give it a sentence, the AI weighs the importance of each word to understand the context. This is its superpower.</p>
+                        <div class="mt-4 p-4 bg-slate-50 rounded-lg text-lg text-center attention-text">
+                            <p>The <span data-word="cat">tired</span> <span data-word="cat">little</span> <span class="highlight" data-word="cat">cat</span>, which had been playing all day, <span data-word="cat">curled</span> up on the soft <span data-word="mat">mat</span> and <span class="highlight" data-word="happily">happily</span> ___.</p>
+                        </div>
+                         <p class="text-sm mt-2 text-slate-600">The AI gives high "attention" to <strong class="text-teal-600">"cat"</strong> and <strong class="text-teal-600">"happily"</strong>. It knows cats that are happy often purr.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-700 mb-2">Step 3: It Makes the Best Guess 🎲</h3>
+                        <p>The AI isn't thinking; it's a super-powered guesser. Based on the clues, it calculates the most probable word to come next.</p>
+                        <p class="mt-2 font-mono bg-green-50 p-3 rounded-lg text-center">"purred" - 95% chance<br>"slept" - 88% chance<br>"barked" - 0.001% chance</p>
+                    </div>
                 </div>
             </section>
 
-            <!-- Slide 4: Intro to Prompting -->
+            <!-- Slide 4: How it works (Technical recap) -->
+            <section class="slide" data-title="How It *Really* Works">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">How It *Really* Works: A Quick Recap</h2>
+                <p class="text-lg text-slate-600 mb-6">The intuitive process we just saw is powered by a sophisticated architecture.</p>
+                 <div class="prose max-w-none text-slate-700">
+                    <p>The core technology is the <strong>Transformer architecture</strong>, which uses the "attention mechanism" to weigh the influence of different words in the input. This allows it to handle long-range dependencies and understand complex context.</p>
+                    <p>It converts words into numerical representations (vectors) and processes them through many layers to predict the most statistically likely output. It's all complex math, not consciousness.</p>
+                </div>
+            </section>
+            
+            <!-- Slide 5: LLM Benchmark (Chart) -->
+            <section class="slide" data-title="Model Performance">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">How Do Top Models Compare?</h2>
+                <p class="text-lg text-slate-600 mb-6">Models are often tested on benchmarks like MMLU (Massive Multitask Language Understanding), which covers subjects from math to history to law.</p>
+                 <div class="chart-container">
+                    <canvas id="mmluBenchmarkChart"></canvas>
+                </div>
+                <p class="text-xs text-center mt-2 text-slate-500">Source: Data adapted from official technical reports (OpenAI, Google, Anthropic). Scores are illustrative of relative performance.</p>
+            </section>
+
+            <!-- Slide 6: Strengths & Weaknesses -->
+            <section class="slide" data-title="Strengths & Weaknesses">
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">Know Its Limits to Unlock Its Power</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-green-50 p-6 rounded-xl border border-green-200">
+                        <h3 class="text-xl font-bold text-green-800 mb-3">Strengths 👍</h3>
+                        <ul class="list-disc list-inside space-y-2 text-green-900">
+                            <li><strong>Speed & Scale:</strong> Processes huge amounts of information in seconds.</li>
+                            <li><strong>Synthesis & Summary:</strong> Extracts key ideas from long texts.</li>
+                            <li><strong>Brainstorming & Creativity:</strong> Generates ideas, outlines, and different versions of text.</li>
+                            <li><strong>Code Generation:</strong> Writes and debugs code across many languages.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-200">
+                        <h3 class="text-xl font-bold text-red-800 mb-3">Weaknesses 👎</h3>
+                        <ul class="list-disc list-inside space-y-2 text-red-900">
+                            <li><strong>Hallucination:</strong> Confidently makes up false information.</li>
+                            <li><strong>Bias:</strong> Reflects prejudices present in its training data.</li>
+                            <li><strong>Knowledge Cutoff:</strong> Is not updated in real-time.</li>
+                            <li><strong>No Critical Thinking:</strong> Cannot judge the reliability of information.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 7: Intro to Prompting -->
             <section class="slide" data-title="Intro to Prompting">
                 <h2 class="text-3xl font-bold text-slate-800 mb-4">Core Skill: From Conversation to Instruction</h2>
                 <p class="text-lg text-slate-600 mb-6">Effective prompting is the art of giving clear, context-rich instructions to an AI. Let's start with foundational techniques.</p>
@@ -135,7 +204,7 @@
                 <p class="mt-4 text-center font-semibold">Few-shot prompting significantly improves accuracy for specific, nuanced tasks.</p>
             </section>
 
-            <!-- Slide 5: Chain of Thought -->
+            <!-- Slide 8: Chain of Thought -->
             <section class="slide" data-title="Chain-of-Thought Prompting">
                 <h2 class="text-3xl font-bold text-slate-800 mb-4">Advanced Technique: Chain-of-Thought (CoT)</h2>
                 <p class="text-lg text-slate-600 mb-6">For complex reasoning tasks, asking the AI to "think step-by-step" dramatically improves its accuracy by forcing it to detail its reasoning process.</p>
@@ -154,7 +223,7 @@
                  </div>
             </section>
             
-            <!-- Slide 6: CRAFT Framework -->
+            <!-- Slide 9: CRAFT Framework -->
             <section class="slide" data-title="The C.R.A.F.T. Framework">
                 <h2 class="text-3xl font-bold text-slate-800 mb-4">A Practical Framework: C.R.A.F.T.</h2>
                 <p class="text-lg text-slate-600 mb-6">Combine techniques into a powerful structure for consistent, high-quality results.</p>
@@ -167,7 +236,7 @@
                  </div>
             </section>
             
-            <!-- Slide 7: Prompt Practice -->
+            <!-- Slide 10: Prompt Practice -->
             <section class="slide" data-title="Workshop Activity: Prompt Practice">
                 <h2 class="text-3xl font-bold text-slate-800 mb-4">Workshop Activity: Let's Build a Prompt</h2>
                 <p class="text-lg text-slate-600 mb-6">Choose the scenario for your major. Use the C.R.A.F.T. framework to write the best possible prompt in your notebook or a text editor.</p>
@@ -187,21 +256,7 @@
                 </div>
             </section>
             
-            <!-- Slide 8: Toolkit Intro -->
-            <section class="slide" data-title="AI Toolkit Intro">
-                <h2 class="text-3xl font-bold text-slate-800 mb-6">The Modern Student's AI Toolkit</h2>
-                <p class="text-lg text-slate-600 mb-6">Let's move beyond general chatbots and look at specialized tools designed for specific academic tasks.</p>
-                 <p class="prose max-w-none text-slate-700">We will analyze tools for four key areas:
-                    <ol>
-                        <li>Academic Research</li>
-                        <li>Advanced Writing & Editing</li>
-                        <li>Data Analysis & Coding</li>
-                        <li>Presentations & Visuals</li>
-                    </ol>
-                </p>
-            </section>
-
-             <!-- Slide 9: Toolkit - Research -->
+            <!-- Slide 11: Toolkit - Research -->
             <section class="slide" data-title="Tools for Research">
                 <h2 class="text-2xl font-bold text-slate-800 mb-4">Toolkit: AI for Academic Research</h2>
                 <p class="text-slate-600 mb-4">These tools help you find papers, extract information, and understand complex topics faster.</p>
@@ -219,7 +274,7 @@
                  <p class="mt-4 text-sm text-slate-500"><strong>Recommendation:</strong> Start with <strong>Consensus</strong> for quick answers. Use <strong>Elicit</strong> for deep literature reviews. Use <strong>Scite.ai</strong> before citing a critical paper.</p>
             </section>
             
-            <!-- Slide 10: Toolkit - Writing -->
+            <!-- Slide 12: Toolkit - Writing -->
             <section class="slide" data-title="Tools for Writing">
                 <h2 class="text-2xl font-bold text-slate-800 mb-4">Toolkit: Advanced Writing & Editing</h2>
                 <p class="text-slate-600 mb-4">Go beyond simple grammar checks to improve style, tone, and clarity.</p>
@@ -238,28 +293,7 @@
                  <p class="mt-4 text-sm text-slate-500"><strong>Recommendation:</strong> Use <strong>QuillBot</strong> during the drafting process to refine your sentences. Use <strong>Grammarly</strong> as the final check before submission.</p>
             </section>
             
-             <!-- Slide 11: Toolkit - Data/Code -->
-            <section class="slide" data-title="Tools for Data & Code">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Toolkit: Data Analysis & Coding</h2>
-                <p class="text-slate-600 mb-4">These tools can write code, analyze data files, and create visualizations from natural language.</p>
-                <div class="bg-white p-6 rounded-lg border">
-                    <h3 class="font-semibold text-xl text-green-700 mb-3">ChatGPT (Advanced Data Analysis) & Claude</h3>
-                    <ul class="list-disc list-inside space-y-2 text-slate-700">
-                        <li><strong>What it is:</strong> An environment within a chatbot that lets you upload files (CSV, Excel, images) and have the AI run Python code to analyze them.</li>
-                        <li><strong>Key Capabilities:</strong>
-                            <ul class="list-['-_'] list-inside ml-4">
-                                <li>Clean and process datasets.</li>
-                                <li>Perform statistical analysis.</li>
-                                <li>Generate complex charts and graphs.</li>
-                                <li>Solve quantitative problems.</li>
-                            </ul>
-                        </li>
-                        <li><strong>Prompt Example:</strong> "Here is a CSV of my survey data. Please perform a correlation analysis between 'hours_studied' and 'final_grade', and generate a scatter plot to visualize the relationship."</li>
-                    </ul>
-                </div>
-            </section>
-
-            <!-- Slide 12: Responsible AI -->
+            <!-- Slide 13: Responsible AI -->
             <section class="slide" data-title="Responsible Use">
                 <h2 class="text-3xl font-bold text-slate-800 mb-6">Responsible & Ethical Use</h2>
                 <p class="text-lg text-slate-600 mb-6">With great power comes great responsibility. Understand the ethical landscape.</p>
@@ -272,7 +306,7 @@
                 </div>
             </section>
 
-            <!-- Slide 13: Future -->
+            <!-- Slide 14: Future -->
             <section class="slide" data-title="The Future">
                  <h2 class="text-3xl font-bold text-slate-800 mb-6">AI and Your Future Career</h2>
                  <p class="text-lg text-slate-600 mb-6">The demand is shifting from performing tasks to defining problems and leveraging tools to solve them.</p>
@@ -282,7 +316,7 @@
                  <p class="text-xs text-center mt-2 text-slate-500">Source: Adapted from World Economic Forum "Future of Jobs" report. Illustrates the rising importance of analytical and creative skills.</p>
             </section>
             
-            <!-- Slide 14: Learning Resources -->
+            <!-- Slide 15: Learning Resources -->
             <section class="slide" data-title="Learning Resources">
                 <h2 class="text-3xl font-bold text-slate-800 mb-6">Keep Learning: Your AI Resources</h2>
                 <p class="text-lg text-slate-600 mb-6">The field changes weekly. Staying curious is your best asset.</p>
@@ -306,7 +340,7 @@
                 </div>
             </section>
             
-            <!-- Slide 15: Q&A -->
+            <!-- Slide 16: Q&A -->
             <section class="slide" data-title="Q&A">
                 <h2 class="text-3xl font-bold text-slate-800 mb-4">Q&A and Final Thoughts</h2>
                 <p class="text-lg text-slate-600 mb-6">Now it's time for your questions!</p>
@@ -353,7 +387,8 @@
 
                 // Lazy load charts
                 if (index === 1 && !charts.compute) createTrainingComputeChart();
-                if (index === 12 && !charts.skills) createSkillsChart();
+                if (index === 4 && !charts.mmlu) createMMLUBenchmarkChart();
+                if (index === 13 && !charts.skills) createSkillsChart();
             }
 
             function updateProgress(index) {
@@ -393,10 +428,10 @@
                 charts.compute = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['2017 (Transformer)', '2018 (GPT-1)', '2019 (GPT-2)', '2020 (GPT-3)', '2022 (PaLM)', '2023 (GPT-4)'],
+                        labels: ['2017 (Transformer)', '2019 (GPT-2)', '2020 (GPT-3)', '2023 (GPT-4)'],
                         datasets: [{
                             label: 'Training Compute (petaFLOPs) - Log Scale',
-                            data: [0.0007, 0.05, 1.5, 314, 2560, 21000], 
+                            data: [0.0007, 1.5, 314, 21000], 
                             borderColor: '#0d9488',
                             backgroundColor: 'rgba(13, 148, 136, 0.2)',
                             fill: true,
@@ -419,6 +454,43 @@
                 });
             }
             
+            function createMMLUBenchmarkChart() {
+                const ctx = document.getElementById('mmluBenchmarkChart').getContext('2d');
+                charts.mmlu = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['GPT-3.5', 'Claude 3 Sonnet', 'Gemini 1.0 Pro', 'GPT-4', 'Claude 3 Opus'],
+                        datasets: [{
+                            label: 'MMLU Score (%)',
+                            data: [70.0, 79.0, 79.1, 86.4, 86.8],
+                            backgroundColor: [
+                                'rgba(107, 114, 128, 0.7)',
+                                'rgba(249, 115, 22, 0.7)',
+                                'rgba(6, 182, 212, 0.7)',
+                                'rgba(13, 148, 136, 0.7)',
+                                'rgba(217, 70, 239, 0.7)'
+                            ],
+                            borderColor: '#374151',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                suggestedMin: 60,
+                                suggestedMax: 90,
+                                title: { display: true, text: 'Accuracy Score (%)'}
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
             function createSkillsChart() {
                  const ctx = document.getElementById('skillsChart').getContext('2d');
                  charts.skills = new Chart(ctx, {
