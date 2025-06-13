@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workshop: From Fundamentals to Mastery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .slide {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+            min-height: 70vh;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+        .nav-button {
+            transition: all 0.2s ease;
+        }
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <div class="max-w-6xl mx-auto p-4 sm:p-8">
+        <!-- Header & Progress Bar -->
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">AI Workshop: From Fundamentals to Mastery</h1>
+            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <div id="progress-label" class="text-center text-sm text-slate-600 mt-2">Part 1/12</div>
+        </header>
+
+        <!-- Slides Container -->
+        <main id="slides-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-lg">
+            
+            <!-- Slide 1: Welcome -->
+            <section class="slide" data-title="Welcome">
+                <h2 class="text-4xl font-bold text-indigo-700 mb-4">Welcome!</h2>
+                <p class="text-xl text-slate-600 mb-6">Let's learn how to turn Large Language Models from a simple tool into a powerful intellectual partner.</p>
+                <div class="prose prose-lg max-w-none text-slate-700">
+                    <p>Over the next 90 minutes, we will build a clear, foundational understanding of AI and develop the practical skills to use it effectively and responsibly for your studies and future career.</p>
+                </div>
+            </section>
+
+            <!-- Slide 2: What is AI? -->
+            <section class="slide" data-title="What is AI?">
+                <h2 class="text-3xl font-bold mb-6">What Are We Talking About?</h2>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <h3 class="font-semibold text-lg mb-2">Artificial Intelligence (AI)</h3>
+                        <p class="text-sm">The broad science of making machines smart.</p>
+                    </div>
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <h3 class="font-semibold text-lg mb-2">Machine Learning (ML)</h3>
+                        <p class="text-sm">A subset of AI where machines learn from data.</p>
+                    </div>
+                    <div class="bg-indigo-100 p-6 rounded-lg ring-2 ring-indigo-300">
+                        <h3 class="font-semibold text-lg mb-2">Large Language Models (LLMs)</h3>
+                        <p class="text-sm">The specific type of AI we're focusing on. They are trained on vast text data to understand and generate language.</p>
+                    </div>
+                </div>
+                <p class="mt-8 text-center text-slate-600">Popular Models: <strong class="font-semibold">GPT series (OpenAI)</strong>, <strong class="font-semibold">Claude series (Anthropic)</strong>, <strong class="font-semibold">Gemini (Google)</strong>.</p>
+            </section>
+            
+            <!-- Slide 3: How LLMs Work -->
+            <section class="slide" data-title="How LLMs Work">
+                <h2 class="text-3xl font-bold mb-6">How an LLM *Really* Works</h2>
+                <p class="text-xl text-slate-600 mb-6">It's not magic. It's a sophisticated <strong class="text-indigo-600">word prediction game</strong>.</p>
+                <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
+                   <p>1. <strong>It learns relationships:</strong> By reading billions of texts, the LLM learns that the word "sky" is often related to "blue," "clouds," and "sun," but rarely to "submarine."</p>
+                   <p>2. <strong>It weighs context:</strong> When you give it a prompt, it pays "attention" to the key words. In the sentence "The capital of Taiwan is ___," it knows "capital" and "Taiwan" are the most important clues.</p>
+                   <p>3. <strong>It predicts the next word:</strong> Based on the clues and the relationships it has learned, it calculates the most statistically probable word to come next. It's not "thinking," it's calculating.</p>
+                </div>
+            </section>
+            
+            <!-- Slide 4: Maximizing Power -->
+            <section class="slide" data-title="Maximizing Power">
+                <h2 class="text-3xl font-bold mb-6">How to Maximize an LLM's Power</h2>
+                <p class="text-xl text-slate-600 mb-6">Your goal is to reduce the AI's guesswork as much as possible.</p>
+                 <div class="grid md:grid-cols-2 gap-8 text-center">
+                    <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                        <h3 class="text-lg font-semibold text-red-800 mb-2">Weak Prompt = High Guesswork</h3>
+                        <p class="font-mono text-sm">"Tell me about TSMC."</p>
+                        <p class="mt-4 text-xs">The AI has to guess: Should it talk about history? Financials? Technology? For what audience? The result is often generic.</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                        <h3 class="text-lg font-semibold text-green-800 mb-2">Strong Prompt = Low Guesswork</h3>
+                        <p class="font-mono text-sm">"Explain TSMC's role in the global semiconductor supply chain to a first-year business student."</p>
+                        <p class="mt-4 text-xs">The AI has clear instructions on the topic, perspective, and audience. The result is focused and useful.</p>
+                    </div>
+                </div>
+                <p class="mt-8 text-center font-semibold">You are the director. The LLM is the actor. Give clear directions.</p>
+            </section>
+
+            <!-- Slide 5: Core Prompting Techniques -->
+            <section class="slide" data-title="Core Prompting Techniques">
+                <h2 class="text-3xl font-bold mb-6">Core Prompting Techniques</h2>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold text-xl mb-2">1. Zero-shot vs. Few-shot Prompting</h3>
+                        <p class="text-slate-600">"Zero-shot" is a direct command. "Few-shot" provides examples to guide the AI, which is more powerful for specific formats.</p>
+                        <p class="font-mono bg-slate-100 p-3 rounded mt-2 text-sm"><strong>Few-shot Example:</strong><br>Q: What is the capital of France? A: Paris.<br>Q: What is the capital of Japan? A: Tokyo.<br>Q: What is the capital of South Korea? A:</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-xl mb-2">2. Chain-of-Thought (CoT) Prompting</h3>
+                        <p class="text-slate-600">For tasks requiring logic, ask the AI to "think step-by-step." This forces it to show its work and improves accuracy.</p>
+                         <p class="font-mono bg-slate-100 p-3 rounded mt-2 text-sm">"...calculate the total cost. <strong>Let's think step-by-step to get the right answer.</strong>"</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 6: ROLES Framework -->
+            <section class="slide" data-title="The R.O.L.E.S. Framework">
+                <h2 class="text-3xl font-bold mb-6">A Simple, Powerful Framework: R.O.L.E.S.</h2>
+                <p class="text-xl text-slate-600 mb-6">Use this structure to build excellent prompts every time.</p>
+                 <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
+                    <p><strong>R - Role:</strong> Assign a specific persona. "Act as a senior marketing analyst..."</p>
+                    <p><strong>O - Objective:</strong> State the primary goal clearly. "...your objective is to analyze customer feedback..."</p>
+                    <p><strong>L - Logic:</strong> Provide step-by-step instructions. "...First, identify the top three themes. Second, find a representative quote for each. Third, suggest one improvement."</p>
+                    <p><strong>E - Examples:</strong> Give a small example of the desired output. "...for example: Theme: Delivery Speed, Quote: 'It arrived in one day!', Suggestion: 'Highlight fast shipping in ads.'"</p>
+                    <p><strong>S - Specifications:</strong> Define the format, tone, and constraints. "...present the output as a Markdown table. The tone should be professional. Do not exceed 300 words."</p>
+                 </div>
+            </section>
+            
+            <!-- Slide 7: Basic Applications -->
+            <section class="slide" data-title="Basic Applications">
+                <h2 class="text-3xl font-bold mb-6">Applications: From Basic to Advanced</h2>
+                <h3 class="text-2xl font-semibold text-indigo-600 mb-4">Level 1: The Information Assistant</h3>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-semibold text-lg">Task: Summarize a long article</h4>
+                        <p class="font-mono bg-slate-100 p-3 rounded mt-2 text-sm">"Act as a research assistant. Read the following article and provide a 5-bullet-point summary of its key findings. [Paste article]"</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">Task: Explain a difficult concept</h4>
+                        <p class="font-mono bg-slate-100 p-3 rounded mt-2 text-sm">"Explain the concept of 'quantum entanglement' to a high school student who is interested in physics. Use an analogy to make it easier to understand."</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 8: Advanced Applications -->
+            <section class="slide" data-title="Advanced Applications">
+                <h2 class="text-3xl font-bold mb-6">Level 2: The Thought Partner</h2>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-semibold text-lg">Task: Create a personalized study plan</h4>
+                        <p class="font-mono bg-slate-100 p-3 rounded mt-2 text-sm">"Act as an academic advisor. Here is the syllabus for my 'Introduction to Macroeconomics' class [paste syllabus]. I have 8 weeks until the final exam. Create a weekly study plan that covers all the topics, including revision sessions and practice quizzes."</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">Task: Critique an argument</h4>
+                        <p class="font-mono bg-slate-100 p-3 rounded mt-2 text-sm">"Act as a critical thinking expert. Read my argument below. Identify the main claim, then point out three potential logical fallacies or weaknesses in the reasoning. Suggest ways to strengthen the argument. [Paste your argument]"</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 9: Group Activity -->
+            <section class="slide" data-title="Group Activity">
+                <h2 class="text-3xl font-bold mb-6">Group Activity: Put R.O.L.E.S. into Practice (15 mins)</h2>
+                <p class="text-xl text-slate-600 mb-6">In groups of 3-4, choose one scenario below and construct a detailed prompt using the R.O.L.E.S. framework. Be ready to share your prompt.</p>
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold">Scenario A (Business/Marketing)</h3>
+                        <p class="text-sm">You need a competitive analysis of FamilyMart versus 7-Eleven in terms of their mobile app features for Taiwanese users.</p>
+                    </div>
+                     <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold">Scenario B (Engineering/Science)</h3>
+                        <p class="text-sm">You need to write the 'Introduction' section for a lab report about an experiment on material stress tests. The AI should generate a draft based on the experiment's objective and expected outcome.</p>
+                    </div>
+                     <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold">Scenario C (Humanities/Law)</h3>
+                        <p class="text-sm">You need a summary of the differing philosophical views of Confucianism and Taoism on the concept of 'good governance'.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 10: AI for Lifelong Learning -->
+            <section class="slide" data-title="AI for Lifelong Learning">
+                <h2 class="text-3xl font-bold mb-6">AI for Lifelong Learning & Research</h2>
+                <p class="text-xl text-slate-600 mb-6">AI is your ultimate learning companion.</p>
+                <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
+                    <p><strong>1. Become a Skill-Building Engine:</strong> Use AI to create learning plans for any skill you want to acquire.
+                    <br><em class="text-base">"I want to learn basic Python for data analysis. I know nothing about coding. Create a 4-week learning plan with daily topics, key concepts, and a small project for each week."</em></p>
+                    
+                    <p><strong>2. Use Specialized Tools for Research:</strong> For literature reviews, tools like <strong class="font-semibold">Elicit</strong> and <strong class="font-semibold">Consensus</strong> are more powerful than general chatbots because they are connected to databases of scientific papers.</p>
+                    
+                    <p><strong>3. Stay Updated:</strong> Ask AI to act as your personal intelligence analyst.
+                    <br><em class="text-base">"Summarize the top 5 most important developments in artificial intelligence from the past month. Explain why each is significant. Provide links to reliable sources."</em></p>
+                </div>
+            </section>
+
+            <!-- Slide 11: Responsible Use -->
+            <section class="slide" data-title="Responsible Use">
+                <h2 class="text-3xl font-bold mb-6">Final, Critical Rules for Responsible Use</h2>
+                <div class="prose prose-lg max-w-none text-slate-700 space-y-4">
+                    <p><strong>1. AI is a Starting Point, Not an End Point:</strong> Use it to generate ideas, drafts, and summaries. The final work, analysis, and critical thought must be yours.</p>
+                    <p><strong>2. Always Verify Critical Information:</strong> LLMs can "hallucinate" (make up facts). Never trust specific data, statistics, or claims without checking them against a primary source.</p>
+                    <p><strong>3. Protect Your Privacy:</strong> Do not input sensitive personal or confidential information into public AI tools.</p>
+                    <p><strong>4. Understand Your University's Policy:</strong> Every institution has its own rules on academic integrity and AI. Know them and follow them.</p>
+                </div>
+            </section>
+            
+            <!-- Slide 12: Q&A -->
+            <section class="slide" data-title="Q&A">
+                <h2 class="text-4xl font-bold text-indigo-700 mb-4">Q&A and Final Thoughts</h2>
+                <p class="text-xl text-slate-600">Your journey with AI starts now.</p>
+                <div class="mt-8 bg-indigo-50 p-6 rounded-lg">
+                     <h3 class="text-xl font-semibold mb-3">Key Takeaway</h3>
+                     <p class="text-lg text-slate-800">The most valuable skill in an AI-powered world is not knowing the answer, but knowing how to ask the right question. Be curious, be critical, and be the director.</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Navigation -->
+        <footer class="mt-8 flex justify-between items-center">
+            <button id="prev-btn" class="nav-button bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg">
+                &larr; Prev
+            </button>
+            <button id="next-btn" class="nav-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg">
+                Next &rarr;
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressLabel = document.getElementById('progress-label');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.remove('active');
+                });
+                slides[index].classList.add('active');
+                updateProgress(index);
+                updateNavButtons(index);
+                currentSlide = index;
+            }
+
+            function updateProgress(index) {
+                const percentage = ((index + 1) / totalSlides) * 100;
+                progressBar.style.width = `${percentage}%`;
+                const slideTitle = slides[index].dataset.title || `Part ${index + 1}`;
+                progressLabel.textContent = `${slideTitle} (${index + 1}/${totalSlides})`;
+            }
+
+            function updateNavButtons(index) {
+                prevBtn.disabled = index === 0;
+                if (index === totalSlides - 1) {
+                    nextBtn.textContent = 'Finish Workshop 🎉';
+                } else {
+                    nextBtn.textContent = 'Next →';
+                }
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < totalSlides - 1) {
+                    showSlide(currentSlide + 1);
+                } else {
+                    alert('Workshop complete! Thank you for your participation.');
+                }
+            });
+
+            // Initialize
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>
