@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Realtime Weather Card</title>
+
+<!-- Fonts + Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" rel="stylesheet">
+
+<!-- Reset + Base -->
+<style>
+:root { --speed: 2s; }
+*{box-sizing:border-box}
+html,body,.background{width:100%;height:100%;margin:0;padding:0;font-family:Lato,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+html{background:#fff}
+body{background:linear-gradient(0deg,rgba(0,0,200,.2),rgba(0,0,200,0))}
+.background{background:linear-gradient(120deg,rgba(50,150,100,.2),rgba(0,0,100,0))}
+.container{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;padding:0;height:100%;width:100%;overflow:auto;position:relative;background:linear-gradient(240deg,rgba(150,50,50,.3),rgba(0,0,200,0))}
+nav ul{margin:20px 20px 0;padding:0;list-style:none;display:flex;gap:4px}
+nav li a{display:block;width:50px;text-align:center;color:#aaa;cursor:pointer}
+nav li a:hover{color:#444}
+nav li a.active{color:#44f}
+#card{box-shadow:9px 7px 40px -6px rgba(0,0,0,.25);overflow:hidden;width:300px;height:400px;min-height:300px;margin:20px;border-radius:12px;position:relative}
+#card .details{position:absolute;top:0;left:0;right:0;padding:16px 20px;color:#888;display:flex;justify-content:space-between;transition:color var(--speed) ease}
+#card .details .right{text-align:right}
+#card .details #date{margin:4px 0}
+#card .details #summary{font-weight:700;font-size:20px}
+#card .details .temp{font-size:56px;line-height:56px}
+#card .details .temp span{font-size:18px;line-height:30px;vertical-align:top;margin-left:5px}
+.weather{background-color:#dae3fd;transition:background-color var(--speed) ease}
+.thunder .weather{background-color:#9fa4ad}
+.rain .weather{background-color:#d8d8d8}
+.sun .weather{background-color:#ccf}
+#inner{background:linear-gradient(to bottom,rgba(255,255,255,.5) 50%,rgba(255,255,255,0) 100%)}
+.cloud{transition:fill var(--speed) ease}
+#cloud1{fill:#efefef}.thunder #cloud1{fill:#9fa4ad}
+#cloud2{fill:#e6e6e6}.thunder #cloud2{fill:#8b8e98}
+#cloud3{fill:#d5d5d5}.thunder #cloud3{fill:#7b7988}
+#outer,#back{position:fixed;pointer-events:none}
+#sun{fill:#f7ed47}
+#sunburst{opacity:0}
+</style>
+</head>
+<body>
+<div class="background">
+  <div class="container">	
+    <svg id="back">
+      <radialGradient id="SVGID_1_" cx="0" cy="0" r="320.8304" gradientUnits="userSpaceOnUse">
+        <stop offset="0" style="stop-color:#FFDE17;stop-opacity:.7"/><stop offset="1" style="stop-color:#FFF200;stop-opacity:0"/>
+      </radialGradient>
+      <path id="sunburst" style="fill:url(#SVGID_1_)" d="M0,319.7c-18.6,0-37.3-1.6-55.5-4.8L-7.8,41.4c5.1,0.9,10.6,0.9,15.7,0L56,314.8C37.6,318,18.8,319.7,0,319.7z
+      M-160.8,276.6c-32.5-18.8-61.3-42.9-85.5-71.6L-34,26.2c3.4,4.1,7.4,7.4,12,10.1L-160.8,276.6z M161.3,276.4L22.1,36.2
+      c4.5-2.6,8.6-6,12-10.1l212.6,178.5C222.5,233.4,193.8,257.6,161.3,276.4z M-302.5,108.3C-315.4,73-321.9,36-322-1.8l277.6-0.5
+      c0,5.3,0.9,10.4,2.7,15.2L-302.5,108.3z M302.6,107.8L41.8,12.8c1.7-4.7,2.6-9.7,2.6-14.9c0-0.3,0-0.6,0-1H322l0-1.3l0,1.9
+      C322,35.4,315.5,72.5,302.6,107.8z M-41.8-17.5l-261-94.5c12.8-35.4,31.6-68,55.8-96.9L-34.1-30.8C-37.5-26.8-40.1-22.3-41.8-17.5z
+      M41.7-17.7c-1.8-4.8-4.4-9.3-7.8-13.3l212-179.2c24.3,28.8,43.3,61.3,56.3,96.6L41.7-17.7z M-22.2-40.8l-139.6-240
+      c32.7-19,68.1-32,105.2-38.6L-8-46.1C-13-45.2-17.8-43.4-22.2-40.8z M22-40.9c-4.4-2.6-9.2-4.3-14.2-5.1l47.1-273.6
+      c37.2,6.4,72.7,19.2,105.4,38L22-40.9z"/>
+    </svg>
+
+    <nav>
+      <ul>
+        <li><a id="button-snow" class="active" title="Snow"><i class="wi wi-snow"></i></a></li>
+        <li><a id="button-wind" title="Wind"><i class="wi wi-strong-wind"></i></a></li>
+        <li><a id="button-rain" title="Rain"><i class="wi wi-rain"></i></a></li>
+        <li><a id="button-thunder" title="Thunder"><i class="wi wi-lightning"></i></a></li>
+        <li><a id="button-sun" title="Sun"><i class="wi wi-day-sunny"></i></a></li>
+      </ul>
+    </nav>
+
+    <div id="card" class="weather">
+      <svg id="inner">
+        <defs><path id="leaf" d="M41.9,56.3l0.1-2.5c0,0,4.6-1.2,5.6-2.2c1-1,3.6-13,12-15.6c9.7-3.1,19.9-2,26.1-2.1c2.7,0-10,23.9-20.5,25 c-7.5,0.8-17.2-5.1-17.2-5.1L41.9,56.3z"/></defs>
+        <circle id="sun" cx="0" cy="0" r="50"/>
+        <g id="layer3"></g><g id="cloud3" class="cloud"></g>
+        <g id="layer2"></g><g id="cloud2" class="cloud"></g>
+        <g id="layer1"></g><g id="cloud1" class="cloud"></g>
+      </svg>
+      <div class="details">
+        <div class="temp">--<span>°C</span></div>
+        <div class="right">
+          <div id="date">—</div>
+          <div id="summary">Đang tải...</div>
+        </div>
+      </div>
+    </div>
+    <svg id="outer"></svg>
+  </div>
+</div>
+
+<!-- Libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
+
+<script>
+// ====== DOM refs / Snap groups ======
+var container=$('.container'), card=$('#card');
+var innerSVG=Snap('#inner'), outerSVG=Snap('#outer'), backSVG=Snap('#back');
+var summary=$('#summary'), dateEl=$('#date'), tempEl=$('.temp');
+var weatherContainer1=Snap.select('#layer1'), weatherContainer2=Snap.select('#layer2'), weatherContainer3=Snap.select('#layer3');
+var innerRainHolder1=weatherContainer1.group(), innerRainHolder2=weatherContainer2.group(), innerRainHolder3=weatherContainer3.group();
+var innerLeafHolder=weatherContainer1.group(), innerSnowHolder=weatherContainer1.group(), innerLightningHolder=weatherContainer1.group();
+var leafMask=outerSVG.rect(), leaf=Snap.select('#leaf'), sun=Snap.select('#sun'), sunburst=Snap.select('#sunburst');
+var outerSplashHolder=outerSVG.group(), outerLeafHolder=outerSVG.group(), outerSnowHolder=outerSVG.group();
+outerLeafHolder.attr({'clip-path': leafMask});
+
+var sizes={container:{width:0,height:0}, card:{width:0,height:0}};
+var clouds=[{group:Snap.select('#cloud1')},{group:Snap.select('#cloud2')},{group:Snap.select('#cloud3')}];
+var weather=[{type:'snow',name:'Snow'},{type:'wind',name:'Windy'},{type:'rain',name:'Rain'},{type:'thunder',name:'Storms'},{type:'sun',name:'Sunny'}];
+
+var settings={windSpeed:2,rainCount:0,leafCount:0,snowCount:0,cloudHeight:100,cloudSpace:30,cloudArch:50,renewCheck:10,splashBounce:80};
+var tickCount=0,rain=[],leafs=[],snow=[],lightningTimeout=null,currentWeather=weather[0];
+
+// ====== Init ======
+init(); $(window).on('resize',onResize); requestAnimationFrame(tick);
+
+function init(){
+  onResize();
+  for(var i=0;i<weather.length;i++){ var w=weather[i], b=$('#button-'+w.type); w.button=b; b.on('click',w,changeWeather); }
+  for(var i=0;i<clouds.length;i++){clouds[i].offset=Math.random()*sizes.card.width; drawCloud(clouds[i],i);}
+  TweenMax.set(sunburst.node,{opacity:0}); changeWeather(weather[4]); // default: sun
+  bootRealtime();
+}
+
+// ====== Realtime Weather via Open-Meteo ======
+async function bootRealtime(){
+  try{
+    const coords = await getCoords();
+    await refreshWeather(coords.lat, coords.lon);
+    setInterval(()=>refreshWeather(coords.lat, coords.lon), 10*60*1000); // 10 min
+  }catch(e){
+    // fallback Taipei
+    await refreshWeather(25.0375,121.5637);
+  }
+}
+
+function getCoords(){
+  return new Promise((resolve,reject)=>{
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        p=>resolve({lat:p.coords.latitude, lon:p.coords.longitude}),
+        ()=>reject(new Error('geo denied')),
+        {enableHighAccuracy:true, timeout:8000, maximumAge:60000}
+      );
+    } else { reject(new Error('geo unsupported')); }
+  });
+}
+
+async function refreshWeather(lat,lon){
+  // Open-Meteo current weather
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&current=temperature_2m,weather_code,precipitation,rain,snowfall,wind_speed_10m`;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('fetch failed');
+  const data = await resp.json();
+  const c = data.current || {};
+  const tempC = typeof c.temperature_2m==='number' ? Math.round(c.temperature_2m) : null;
+  const code = c.weather_code;
+  const wind = c.wind_speed_10m || 0;
+  const rainMm = c.rain || 0;
+  const snowMm = c.snowfall || 0;
+
+  const mapped = mapCode(code, wind, rainMm, snowMm);
+  // Update card UI
+  if(tempC!==null){ tempEl.html(`${tempC}<span>°C</span>`); }
+  summary.text(mapped.label);
+  dateEl.text(new Date().toLocaleString('vi-VN',{weekday:'long', day:'2-digit', month:'long'}));
+  // Drive animation
+  changeWeather({type:mapped.type, name:mapped.label});
+}
+
+function mapCode(code, wind, rainMm, snowMm){
+  // Open-Meteo WMO codes. Minimal mapping → our 5 types.
+  // Thunder: 95–99. Rain: 51–67,80–82. Snow: 71–77,85–86. Sun: 0,1. Wind: fallback by wind speed.
+  if([95,96,99].includes(code)) return {type:'thunder', label:'Dông sấm'};
+  if([71,73,75,77,85,86].includes(code) || snowMm>0) return {type:'snow', label:'Tuyết'};
+  if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code) || rainMm>0.2) return {type:'rain', label:'Mưa'};
+  if([0,1].includes(code)) return {type:'sun', label: code===0?'Quang đãng':'Nhiều nắng'};
+  if(wind>=8) return {type:'wind', label:'Gió mạnh'};
+  // Cloudy variants → wind if windy else sun-lite
+  if([2,3,45,48].includes(code)) return wind>=8 ? {type:'wind',label:'Gió'} : {type:'sun',label:'Nhiều mây'};
+  return {type:'sun', label:'Thời tiết'};
+}
+
+// ====== Layout / Animation internals ======
+function onResize(){
+  sizes.container.width=container.width(); sizes.container.height=container.height();
+  sizes.card.width=card.width(); sizes.card.height=card.height(); sizes.card.offset=card.offset();
+  innerSVG.attr({width:sizes.card.width,height:sizes.card.height});
+  outerSVG.attr({width:sizes.container.width,height:sizes.container.height});
+  backSVG.attr({width:sizes.container.width,height:sizes.container.height});
+  TweenMax.set(sunburst.node,{transformOrigin:"50% 50%", x:sizes.container.width/2, y:(sizes.card.height/2)+sizes.card.offset.top});
+  TweenMax.fromTo(sunburst.node,20,{rotation:0},{rotation:360,repeat:-1,ease:Power0.easeInOut});
+  leafMask.attr({x:sizes.card.offset.left, y:0, width:sizes.container.width-sizes.card.offset.left, height:sizes.container.height});
+}
+
+function drawCloud(cloud,i){
+  var space=settings.cloudSpace*i, height=space+settings.cloudHeight, arch=height+settings.cloudArch+(Math.random()*settings.cloudArch), width=sizes.card.width;
+  var p=[]; p.push('M'+[-width,0]); p.push([width,0]); p.push('Q'+[width*2,height/2]); p.push([width,height]);
+  p.push('Q'+[width*.5,arch]); p.push([0,height]); p.push('Q'+[-width*.5,arch]); p.push([-width,height]); p.push('Q'+[-(width*2),height/2]); p.push([-width,0]);
+  if(!cloud.path) cloud.path=cloud.group.path(); cloud.path.animate({d:p.join(' ')},0);
+}
+
+// Rain / splash / leaves / snow (unchanged core, trimmed comments)
+function makeRain(){ var lw=Math.random()*3, len=(currentWeather.type=='thunder'?35:14), x=Math.random()*(sizes.card.width-40)+20;
+  var line=this['innerRainHolder'+(3-Math.floor(lw))].path('M0,0 0,'+len).attr({fill:'none',stroke:(currentWeather.type=='thunder'?'#777':'#00f'),strokeWidth:lw});
+  rain.push(line); TweenMax.fromTo(line.node,1,{x:x,y:0-len},{delay:Math.random(),y:sizes.card.height,ease:Power2.easeIn,onComplete:onRainEnd,onCompleteParams:[line,lw,x,currentWeather.type]}); }
+function onRainEnd(line,w,x,type){ line.remove(); for(var i in rain){ if(!rain[i].paper) rain.splice(i,1);} if(rain.length<settings.rainCount){ makeRain(); if(w>2) makeSplash(x,type);} }
+function makeSplash(x,type){ var len=(type=='thunder'?30:20), bounce=(type=='thunder'?120:100), dist=80, speed=(type=='thunder'?0.7:0.5);
+  var up=0-(Math.random()*bounce), rx=((Math.random()*dist)-(dist/2)); var pts=['M0,0','Q'+rx+','+up,(rx*2)+','+dist];
+  var splash=outerSplashHolder.path(pts.join(' ')).attr({fill:"none",stroke:(type=='thunder'?'#777':'#00f'),strokeWidth:1});
+  var pathLen=Snap.path.getTotalLength(splash), xOff=sizes.card.offset.left, yOff=sizes.card.offset.top+sizes.card.height;
+  splash.node.style.strokeDasharray=len+' '+pathLen;
+  TweenMax.fromTo(splash.node,speed,{strokeWidth:2,y:yOff,x:xOff+20+x,opacity:1,strokeDashoffset:len},{strokeWidth:0,strokeDashoffset:-pathLen,opacity:1,onComplete:function(){splash.remove()},ease:SlowMo.ease.config(0.4,0.1,false)}); }
+function makeLeaf(){ var s=.5+(Math.random()*.5), newLeaf, areaY=sizes.card.height/2, y=areaY+(Math.random()*areaY), endY=y-((Math.random()*(areaY*2))-areaY), x,endX;
+  var colors=['#76993E','#4A5E23','#6D632F'], color=colors[Math.floor(Math.random()*colors.length)], xB;
+  if(s>0.8){ newLeaf=leaf.clone().appendTo(outerLeafHolder).attr({fill:color}); y+=sizes.card.offset.top/2; endY+=sizes.card.offset.top/2; x=sizes.card.offset.left-100; xB=x+(sizes.container.width-sizes.card.offset.left)/2; endX=sizes.container.width+50; }
+  else{ newLeaf=leaf.clone().appendTo(innerLeafHolder).attr({fill:color}); x=-100; xB=sizes.card.width/2; endX=sizes.card.width+50; }
+  leafs.push(newLeaf); var bez=[{x:x,y:y},{x:xB,y:(Math.random()*endY)+(endY/3)},{x:endX,y:endY}];
+  TweenMax.fromTo(newLeaf.node,2,{rotation:Math.random()*180,x:x,y:y,scale:s},{rotation:Math.random()*360,bezier:bez,onComplete:onLeafEnd,onCompleteParams:[newLeaf],ease:Power0.easeIn}); }
+function onLeafEnd(l){ l.remove(); for(var i in leafs){ if(!leafs[i].paper) leafs.splice(i,1);} if(leafs.length<settings.leafCount) makeLeaf(); }
+function makeSnow(){ var s=.5+(Math.random()*.5), x=20+(Math.random()*(sizes.card.width-40)), y=-10, endY,newSnow;
+  if(s>0.8){ newSnow=outerSnowHolder.circle(0,0,5).attr({fill:'#fff'}); endY=sizes.container.height+10; y=sizes.card.offset.top+settings.cloudHeight; x=x+sizes.card.offset.left; }
+  else{ newSnow=innerSnowHolder.circle(0,0,5).attr({fill:'#fff'}); endY=sizes.card.height+10; }
+  snow.push(newSnow); TweenMax.fromTo(newSnow.node,3+(Math.random()*5),{x:x,y:y},{y:endY,onComplete:onSnowEnd,onCompleteParams:[newSnow],ease:Power0.easeIn});
+  TweenMax.fromTo(newSnow.node,1,{scale:0},{scale:s,ease:Power1.easeInOut}); TweenMax.to(newSnow.node,3,{x:x+((Math.random()*150)-75),repeat:-1,yoyo:true,ease:Power1.easeInOut}); }
+function onSnowEnd(f){ f.remove(); for(var i in snow){ if(!snow[i].paper) snow.splice(i,1);} if(snow.length<settings.snowCount) makeSnow(); }
+function tick(){ tickCount++; if(tickCount%settings.renewCheck){ if(rain.length<settings.rainCount) makeRain(); if(leafs.length<settings.leafCount) makeLeaf(); if(snow.length<settings.snowCount) makeSnow(); }
+  for(var i=0;i<clouds.length;i++){ if(currentWeather.type=='sun'){ if(clouds[i].offset>-(sizes.card.width*1.5)) clouds[i].offset+=settings.windSpeed/(i+1);
+      if(clouds[i].offset>sizes.card.width*2.5) clouds[i].offset=-(sizes.card.width*1.5); clouds[i].group.transform('t'+clouds[i].offset+',0'); }
+    else{ clouds[i].offset+=settings.windSpeed/(i+1); if(clouds[i].offset>sizes.card.width) clouds[i].offset=clouds[i].offset-sizes.card.width; clouds[i].group.transform('t'+clouds[i].offset+',0'); } }
+  requestAnimationFrame(tick); }
+function reset(){ for(var i=0;i<weather.length;i++){ container.removeClass(weather[i].type); weather[i].button.removeClass('active'); } }
+function updateSummaryText(){ TweenMax.fromTo(summary,1.2,{x:30},{opacity:1,x:0,ease:Power4.easeOut}); }
+function startLightningTimer(){ if(lightningTimeout) clearTimeout(lightningTimeout); if(currentWeather.type=='thunder'){ lightningTimeout=setTimeout(lightning,Math.random()*6000);} }
+function lightning(){ startLightningTimer(); TweenMax.fromTo(card,0.75,{y:-30},{y:0,ease:Elastic.easeOut});
+  var pathX=30+Math.random()*(sizes.card.width-60), steps=20, pts=[pathX+',0']; for(var i=0;i<steps;i++){ var x=pathX+(Math.random()*20-10), y=(sizes.card.height/steps)*(i+1); pts.push(x+','+y);}
+  var strike=weatherContainer1.path('M'+pts.join(' ')).attr({fill:'none',stroke:'#fff',strokeWidth:2+Math.random()});
+  TweenMax.to(strike.node,1,{opacity:0,ease:Power4.easeOut,onComplete:function(){strike.remove()}}); }
+function changeWeather(w){ if(w.data) w=w.data; reset(); currentWeather=w;
+  TweenMax.killTweensOf(summary); TweenMax.to(summary,0.6,{opacity:0,x:-30,onComplete:function(){ summary.text(w.name||w.type); updateSummaryText(); }, ease:Power4.easeIn});
+  container.addClass(w.type); $('#button-'+w.type).addClass('active');
+  // wind
+  if(w.type==='wind') TweenMax.to(settings,3,{windSpeed:3,ease:Power2.easeInOut});
+  else if(w.type==='sun') TweenMax.to(settings,3,{windSpeed:20,ease:Power2.easeInOut});
+  else TweenMax.to(settings,3,{windSpeed:.5,ease:Power2.easeOut});
+  // rain
+  if(w.type==='rain') TweenMax.to(settings,3,{rainCount:10,ease:Power2.easeInOut});
+  else if(w.type==='thunder') TweenMax.to(settings,3,{rainCount:60,ease:Power2.easeInOut});
+  else TweenMax.to(settings,1,{rainCount:0,ease:Power2.easeOut});
+  // leaves
+  if(w.type==='wind') TweenMax.to(settings,3,{leafCount:5,ease:Power2.easeInOut}); else TweenMax.to(settings,1,{leafCount:0,ease:Power2.easeOut});
+  // snow
+  if(w.type==='snow') TweenMax.to(settings,3,{snowCount:40,ease:Power2.easeInOut}); else TweenMax.to(settings,1,{snowCount:0,ease:Power2.easeOut});
+  // sun + burst
+  if(w.type==='sun'){ TweenMax.to(sun.node,4,{x:sizes.card.width/2,y:sizes.card.height/2,ease:Power2.easeInOut});
+    TweenMax.to(sunburst.node,4,{scale:1,opacity:.8,y:(sizes.card.height/2)+(sizes.card.offset.top),ease:Power2.easeInOut}); }
+  else { TweenMax.to(sun.node,2,{x:sizes.card.width/2,y:-100,ease:Power2.easeInOut});
+    TweenMax.to(sunburst.node,2,{scale:.4,opacity:0,y:(sizes.container.height/2)-50,ease:Power2.easeInOut}); }
+  startLightningTimer();
+}
+</script>
+
+</body>
+</html>
