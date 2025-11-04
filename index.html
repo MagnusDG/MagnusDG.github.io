@@ -11,7 +11,7 @@
   html, body {
     height: 100%;
     margin: 0;
-    background-color: #111; /* quan trọng để Notion không đen thui */
+    background: transparent; /* quan trọng để Notion không đen thui */
   }
   #container {
     position: relative;
@@ -32,10 +32,6 @@
     user-select: none;
     color: #fff;             /* trắng để nổi trên nền Notion dark; nếu nền sáng, đổi thành #111 */
     will-change: filter, opacity;
-  }
-  /* fallback nền sáng: tự động nếu hệ thống ở light mode */
-  @media (prefers-color-scheme: light) {
-    #text1, #text2 { color: #111; }
   }
   /* co nhỏ trên màn hình hẹp */
   @media (max-width: 480px) {
