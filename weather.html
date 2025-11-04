@@ -1,15 +1,14 @@
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Realtime Weather Card</title>
 
 <!-- Fonts + Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" rel="stylesheet">
 
-<!-- Reset + Base -->
 <style>
 :root { --speed: 2s; }
 *{box-sizing:border-box}
@@ -22,7 +21,7 @@ nav ul{margin:20px 20px 0;padding:0;list-style:none;display:flex;gap:4px}
 nav li a{display:block;width:50px;text-align:center;color:#aaa;cursor:pointer}
 nav li a:hover{color:#444}
 nav li a.active{color:#44f}
-#card{box-shadow:9px 7px 40px -6px rgba(0,0,0,.25);overflow:hidden;width:300px;height:400px;min-height:300px;margin:20px;border-radius:12px;position:relative}
+#card{box-shadow:9px 7px 40px -6px rgba(0,0,0,.25);overflow:hidden;width:300px;height:420px;min-height:300px;margin:20px;border-radius:12px;position:relative}
 #card .details{position:absolute;top:0;left:0;right:0;padding:16px 20px;color:#888;display:flex;justify-content:space-between;transition:color var(--speed) ease}
 #card .details .right{text-align:right}
 #card .details #date{margin:4px 0}
@@ -41,6 +40,9 @@ nav li a.active{color:#44f}
 #outer,#back{position:fixed;pointer-events:none}
 #sun{fill:#f7ed47}
 #sunburst{opacity:0}
+#controls{display:flex;gap:8px;align-items:center; margin-top:-8px}
+#citySel{height:32px;border:1px solid #ccc;border-radius:8px;padding:0 8px;background:#fff}
+#status{font-size:12px;color:#777}
 </style>
 </head>
 <body>
@@ -62,11 +64,11 @@ nav li a.active{color:#44f}
 
     <nav>
       <ul>
-        <li><a id="button-snow" class="active" title="Snow"><i class="wi wi-snow"></i></a></li>
+        <li><a id="button-snow" title="Snow"><i class="wi wi-snow"></i></a></li>
         <li><a id="button-wind" title="Wind"><i class="wi wi-strong-wind"></i></a></li>
         <li><a id="button-rain" title="Rain"><i class="wi wi-rain"></i></a></li>
         <li><a id="button-thunder" title="Thunder"><i class="wi wi-lightning"></i></a></li>
-        <li><a id="button-sun" title="Sun"><i class="wi wi-day-sunny"></i></a></li>
+        <li><a id="button-sun" class="active" title="Sun"><i class="wi wi-day-sunny"></i></a></li>
       </ul>
     </nav>
 
@@ -86,6 +88,19 @@ nav li a.active{color:#44f}
         </div>
       </div>
     </div>
+
+    <div id="controls">
+      <select id="citySel">
+        <option value="">— Chọn thành phố —</option>
+        <option>Chiayi</option>
+        <option>Taipei</option>
+        <option>Taichung</option>
+        <option>Tainan</option>
+        <option>Kaohsiung</option>
+      </select>
+      <span id="status"></span>
+    </div>
+
     <svg id="outer"></svg>
   </div>
 </div>
@@ -96,97 +111,223 @@ nav li a.active{color:#44f}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
 
 <script>
-// ====== DOM refs / Snap groups ======
+// ===== CONFIG =====
+const GOOGLE_KEY = 'PASTE_YOUR_GOOGLE_KEY_HERE'; // bắt buộc: khóa Weather/Geocoding. Dùng referrer restriction.
+const USE_GOOGLE_FIRST = true; // true: thử Google trước. Nếu lỗi → fallback Open-Meteo.
+const REFRESH_MS = 10*60*1000; // 10 phút
+
+// ===== DOM / Snap refs =====
 var container=$('.container'), card=$('#card');
 var innerSVG=Snap('#inner'), outerSVG=Snap('#outer'), backSVG=Snap('#back');
 var summary=$('#summary'), dateEl=$('#date'), tempEl=$('.temp');
+var statusEl=$('#status'), citySel=$('#citySel');
 var weatherContainer1=Snap.select('#layer1'), weatherContainer2=Snap.select('#layer2'), weatherContainer3=Snap.select('#layer3');
 var innerRainHolder1=weatherContainer1.group(), innerRainHolder2=weatherContainer2.group(), innerRainHolder3=weatherContainer3.group();
 var innerLeafHolder=weatherContainer1.group(), innerSnowHolder=weatherContainer1.group(), innerLightningHolder=weatherContainer1.group();
 var leafMask=outerSVG.rect(), leaf=Snap.select('#leaf'), sun=Snap.select('#sun'), sunburst=Snap.select('#sunburst');
 var outerSplashHolder=outerSVG.group(), outerLeafHolder=outerSVG.group(), outerSnowHolder=outerSVG.group();
 outerLeafHolder.attr({'clip-path': leafMask});
-
 var sizes={container:{width:0,height:0}, card:{width:0,height:0}};
 var clouds=[{group:Snap.select('#cloud1')},{group:Snap.select('#cloud2')},{group:Snap.select('#cloud3')}];
 var weather=[{type:'snow',name:'Snow'},{type:'wind',name:'Windy'},{type:'rain',name:'Rain'},{type:'thunder',name:'Storms'},{type:'sun',name:'Sunny'}];
-
 var settings={windSpeed:2,rainCount:0,leafCount:0,snowCount:0,cloudHeight:100,cloudSpace:30,cloudArch:50,renewCheck:10,splashBounce:80};
-var tickCount=0,rain=[],leafs=[],snow=[],lightningTimeout=null,currentWeather=weather[0];
+var tickCount=0,rain=[],leafs=[],snow=[],lightningTimeout=null,currentWeather=weather[4];
 
-// ====== Init ======
+// ===== Boot =====
 init(); $(window).on('resize',onResize); requestAnimationFrame(tick);
 
 function init(){
   onResize();
   for(var i=0;i<weather.length;i++){ var w=weather[i], b=$('#button-'+w.type); w.button=b; b.on('click',w,changeWeather); }
   for(var i=0;i<clouds.length;i++){clouds[i].offset=Math.random()*sizes.card.width; drawCloud(clouds[i],i);}
-  TweenMax.set(sunburst.node,{opacity:0}); changeWeather(weather[4]); // default: sun
+  TweenMax.set(sunburst.node,{opacity:0});
+  bindCitySelector();
   bootRealtime();
 }
 
-// ====== Realtime Weather via Open-Meteo ======
-async function bootRealtime(){
-  try{
-    const coords = await getCoords();
-    await refreshWeather(coords.lat, coords.lon);
-    setInterval(()=>refreshWeather(coords.lat, coords.lon), 10*60*1000); // 10 min
-  }catch(e){
-    // fallback Chiayi
-    await refreshWeather(23.4801, 120.4491);
-    console.log('Fallback → Chiayi');
-  }
-}
-
-function getCoords(){
-  return new Promise((resolve,reject)=>{
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        p=>resolve({lat:p.coords.latitude, lon:p.coords.longitude}),
-        ()=>reject(new Error('geo denied')),
-        {enableHighAccuracy:true, timeout:8000, maximumAge:60000}
-      );
-    } else { reject(new Error('geo unsupported')); }
+function bindCitySelector(){
+  citySel.on('change', async (e)=>{
+    const name=e.target.value; if(!name) return;
+    localStorage.setItem('weather_city', name);
+    try{ const g=await geocodeByName(name); await refreshWeather(g.lat,g.lon); }catch(err){ setStatus('Geocode lỗi'); }
   });
 }
 
-async function refreshWeather(lat,lon){
-  // Open-Meteo current weather
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-    + `&current=temperature_2m,weather_code,precipitation,rain,snowfall,wind_speed_10m`;
-  const resp = await fetch(url);
-  if(!resp.ok) throw new Error('fetch failed');
-  const data = await resp.json();
-  const c = data.current || {};
-  const tempC = typeof c.temperature_2m==='number' ? Math.round(c.temperature_2m) : null;
-  const code = c.weather_code;
-  const wind = c.wind_speed_10m || 0;
-  const rainMm = c.rain || 0;
-  const snowMm = c.snowfall || 0;
+// ===== Fallback chain =====
+async function bootRealtime(){
+  try{
+    // 0) Override ?lat=&lon=
+    const qs = new URLSearchParams(location.search);
+    if(qs.get('lat') && qs.get('lon')){
+      await refreshWeather(+qs.get('lat'), +qs.get('lon'));
+      setInterval(()=>refreshWeather(+qs.get('lat'), +qs.get('lon')), REFRESH_MS);
+      return;
+    }
 
-  const mapped = mapCode(code, wind, rainMm, snowMm);
-  // Update card UI
-  if(tempC!==null){ tempEl.html(`${tempC}<span>°C</span>`); }
-  summary.text(mapped.label);
-  dateEl.text(new Date().toLocaleString('vi-VN',{weekday:'long', day:'2-digit', month:'long'}));
-  // Drive animation
-  changeWeather({type:mapped.type, name:mapped.label});
+    // 1) Geolocation (thường fail trong Notion iframe)
+    if (window.isSecureContext && 'geolocation' in navigator){
+      try{
+        const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(
+          p=>res(p), e=>rej(e), {enableHighAccuracy:true, timeout:8000, maximumAge:60000}));
+        await refreshWeather(pos.coords.latitude, pos.coords.longitude);
+        setInterval(()=>refreshWeather(pos.coords.latitude, pos.coords.longitude), REFRESH_MS);
+        return;
+      }catch(e){}
+    }
+
+    // 2) City đã lưu
+    const saved = localStorage.getItem('weather_city');
+    if(saved){
+      try{ const g=await geocodeByName(saved); await refreshWeather(g.lat,g.lon);
+        setInterval(()=>refreshWeather(g.lat,g.lon), REFRESH_MS); return; }catch(e){}
+    }
+
+    // 3) Geocode "Chiayi"
+    try{
+      const g=await geocodeByName('Chiayi'); await refreshWeather(g.lat,g.lon);
+      setInterval(()=>refreshWeather(g.lat,g.lon), REFRESH_MS); return;
+    }catch(e){}
+
+    // 4) Hard fallback: Chiayi
+    await refreshWeather(23.4801,120.4491);
+    setInterval(()=>refreshWeather(23.4801,120.4491), REFRESH_MS);
+  }catch(e){
+    await refreshWeather(23.4801,120.4491);
+    setInterval(()=>refreshWeather(23.4801,120.4491), REFRESH_MS);
+  }
 }
 
-function mapCode(code, wind, rainMm, snowMm){
-  // Open-Meteo WMO codes. Minimal mapping → our 5 types.
-  // Thunder: 95–99. Rain: 51–67,80–82. Snow: 71–77,85–86. Sun: 0,1. Wind: fallback by wind speed.
+function setStatus(msg){ statusEl.text(msg); setTimeout(()=>statusEl.text(''), 4000); }
+
+// ===== Weather providers =====
+
+// Google Weather → hoạt động khi bật Weather API + referrer đúng.
+async function fetchGoogleWeather(lat,lon){
+  const url = `https://weather.googleapis.com/v1/currentConditions:lookup`
+            + `?key=${encodeURIComponent(GOOGLE_KEY)}`
+            + `&location.latitude=${lat}`
+            + `&location.longitude=${lon}`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('google weather failed '+r.status);
+  return r.json();
+}
+
+// Open-Meteo fallback (không cần key)
+async function fetchOpenMeteo(lat,lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+            + `&current=temperature_2m,weather_code,precipitation,rain,snowfall,wind_speed_10m`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('open-meteo failed');
+  return r.json();
+}
+
+// Google Geocoding theo tên TP
+async function geocodeByName(name){
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${encodeURIComponent(GOOGLE_KEY)}`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('geocode failed');
+  const j = await r.json();
+  if (j.results && j.results.length){
+    const g = j.results[0].geometry.location; // {lat, lng}
+    return { lat: g.lat, lon: g.lng, source: `geocode:${name}` };
+  }
+  throw new Error('geocode empty');
+}
+
+// Map Google Weather → animation
+function mapGoogleToAnim(wType, windKmh, precipMm, snowMm){
+  const t = (wType||'').toUpperCase();
+  if (t.includes('THUNDER')) return { type:'thunder', label:'Dông sấm' };
+  if (t.includes('SNOW') || (snowMm||0) > 0) return { type:'snow', label:'Tuyết' };
+  if (t.includes('RAIN') || t.includes('DRIZZLE') || (precipMm||0) > 0.2) return { type:'rain', label:'Mưa' };
+  if (t.includes('CLEAR')) return { type:'sun', label:'Quang đãng' };
+  if (t.includes('CLOUD')) return (windKmh||0) >= 20 ? {type:'wind',label:'Gió mạnh'} : {type:'sun',label:'Nhiều mây'};
+  if ((windKmh||0) >= 20) return { type:'wind', label:'Gió mạnh' };
+  return { type:'sun', label:'Thời tiết' };
+}
+
+// Map Open-Meteo WMO → animation
+function mapOpenMeteoToAnim(code, wind, rainMm, snowMm){
   if([95,96,99].includes(code)) return {type:'thunder', label:'Dông sấm'};
-  if([71,73,75,77,85,86].includes(code) || snowMm>0) return {type:'snow', label:'Tuyết'};
-  if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code) || rainMm>0.2) return {type:'rain', label:'Mưa'};
+  if([71,73,75,77,85,86].includes(code) || (snowMm||0)>0) return {type:'snow', label:'Tuyết'};
+  if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code) || (rainMm||0)>0.2) return {type:'rain', label:'Mưa'};
   if([0,1].includes(code)) return {type:'sun', label: code===0?'Quang đãng':'Nhiều nắng'};
-  if(wind>=8) return {type:'wind', label:'Gió mạnh'};
-  // Cloudy variants → wind if windy else sun-lite
-  if([2,3,45,48].includes(code)) return wind>=8 ? {type:'wind',label:'Gió'} : {type:'sun',label:'Nhiều mây'};
+  if([2,3,45,48].includes(code)) return (wind||0)>=8 ? {type:'wind',label:'Gió'} : {type:'sun',label:'Nhiều mây'};
   return {type:'sun', label:'Thời tiết'};
 }
 
-// ====== Layout / Animation internals ======
+// ===== Unified refresh =====
+async function refreshWeather(lat,lon){
+  setStatus(`lat=${lat.toFixed(3)} lon=${lon.toFixed(3)}`);
+  let ok=false;
+
+  if (USE_GOOGLE_FIRST && GOOGLE_KEY && GOOGLE_KEY!=='PASTE_YOUR_GOOGLE_KEY_HERE'){
+    try{
+      const d = await fetchGoogleWeather(lat,lon);
+      // Google schema: phòng khi thay đổi, lấy an toàn theo nhiều nhánh
+      const cc = d || {};
+      // nhiệt độ: thử nhiều đường
+      const tempC = Math.round(
+        cc?.temperature?.degrees ??
+        cc?.temperature?.value ??
+        cc?.currentConditions?.temperature?.value ??
+        cc?.currentConditions?.temperature?.degrees ??
+        NaN
+      );
+      // gió (km/h)
+      const windKmh = (
+        cc?.wind?.speed?.value ??
+        cc?.currentConditions?.wind?.speed?.value ??
+        0
+      );
+      // mưa
+      const precipMm = (
+        cc?.precipitation?.qpf?.quantity ??
+        cc?.currentConditions?.precipitation?.qpf?.quantity ??
+        0
+      );
+      // tuyết
+      const snowMm = (
+        cc?.currentConditionsHistory?.qpfSnow?.quantity ??
+        0
+      );
+      // condition
+      const wType = (
+        cc?.weatherCondition?.type ??
+        cc?.currentConditions?.weatherCondition?.type ??
+        ''
+      );
+      const desc = (
+        cc?.weatherCondition?.description?.text ??
+        cc?.currentConditions?.weatherCondition?.description?.text ??
+        ''
+      );
+
+      if (!Number.isNaN(tempC)) tempEl.html(`${tempC}<span>°C</span>`);
+
+      const mapped = mapGoogleToAnim(wType, windKmh, precipMm, snowMm);
+      $('#summary').text(desc || mapped.label);
+      $('#date').text(new Date().toLocaleString('vi-VN',{weekday:'long', day:'2-digit', month:'long'}));
+      changeWeather({type:mapped.type, name:mapped.label});
+      ok=true;
+    }catch(e){
+      console.warn('Google Weather error, fallback Open-Meteo', e);
+    }
+  }
+
+  if(!ok){
+    const data = await fetchOpenMeteo(lat,lon);
+    const c = data.current||{};
+    const tempC = typeof c.temperature_2m==='number' ? Math.round(c.temperature_2m) : null;
+    if(tempC!==null) tempEl.html(`${tempC}<span>°C</span>`);
+    const mapped = mapOpenMeteoToAnim(c.weather_code, c.wind_speed_10m||0, c.rain||0, c.snowfall||0);
+    $('#summary').text(mapped.label);
+    $('#date').text(new Date().toLocaleString('vi-VN',{weekday:'long', day:'2-digit', month:'long'}));
+    changeWeather({type:mapped.type, name:mapped.label});
+  }
+}
+
+// ===== Layout / Animation core (giữ nguyên logic) =====
 function onResize(){
   sizes.container.width=container.width(); sizes.container.height=container.height();
   sizes.card.width=card.width(); sizes.card.height=card.height(); sizes.card.offset=card.offset();
@@ -197,15 +338,12 @@ function onResize(){
   TweenMax.fromTo(sunburst.node,20,{rotation:0},{rotation:360,repeat:-1,ease:Power0.easeInOut});
   leafMask.attr({x:sizes.card.offset.left, y:0, width:sizes.container.width-sizes.card.offset.left, height:sizes.container.height});
 }
-
 function drawCloud(cloud,i){
   var space=settings.cloudSpace*i, height=space+settings.cloudHeight, arch=height+settings.cloudArch+(Math.random()*settings.cloudArch), width=sizes.card.width;
   var p=[]; p.push('M'+[-width,0]); p.push([width,0]); p.push('Q'+[width*2,height/2]); p.push([width,height]);
   p.push('Q'+[width*.5,arch]); p.push([0,height]); p.push('Q'+[-width*.5,arch]); p.push([-width,height]); p.push('Q'+[-(width*2),height/2]); p.push([-width,0]);
   if(!cloud.path) cloud.path=cloud.group.path(); cloud.path.animate({d:p.join(' ')},0);
 }
-
-// Rain / splash / leaves / snow (unchanged core, trimmed comments)
 function makeRain(){ var lw=Math.random()*3, len=(currentWeather.type=='thunder'?35:14), x=Math.random()*(sizes.card.width-40)+20;
   var line=this['innerRainHolder'+(3-Math.floor(lw))].path('M0,0 0,'+len).attr({fill:'none',stroke:(currentWeather.type=='thunder'?'#777':'#00f'),strokeWidth:lw});
   rain.push(line); TweenMax.fromTo(line.node,1,{x:x,y:0-len},{delay:Math.random(),y:sizes.card.height,ease:Power2.easeIn,onComplete:onRainEnd,onCompleteParams:[line,lw,x,currentWeather.type]}); }
@@ -234,7 +372,7 @@ function tick(){ tickCount++; if(tickCount%settings.renewCheck){ if(rain.length<
       if(clouds[i].offset>sizes.card.width*2.5) clouds[i].offset=-(sizes.card.width*1.5); clouds[i].group.transform('t'+clouds[i].offset+',0'); }
     else{ clouds[i].offset+=settings.windSpeed/(i+1); if(clouds[i].offset>sizes.card.width) clouds[i].offset=clouds[i].offset-sizes.card.width; clouds[i].group.transform('t'+clouds[i].offset+',0'); } }
   requestAnimationFrame(tick); }
-function reset(){ for(var i=0;i<weather.length;i++){ container.removeClass(weather[i].type); weather[i].button.removeClass('active'); } }
+function reset(){ for(var i=0;i<weather.length;i++){ container.removeClass(weather[i].type); if(weather[i].button) weather[i].button.removeClass('active'); } }
 function updateSummaryText(){ TweenMax.fromTo(summary,1.2,{x:30},{opacity:1,x:0,ease:Power4.easeOut}); }
 function startLightningTimer(){ if(lightningTimeout) clearTimeout(lightningTimeout); if(currentWeather.type=='thunder'){ lightningTimeout=setTimeout(lightning,Math.random()*6000);} }
 function lightning(){ startLightningTimer(); TweenMax.fromTo(card,0.75,{y:-30},{y:0,ease:Elastic.easeOut});
@@ -243,20 +381,15 @@ function lightning(){ startLightningTimer(); TweenMax.fromTo(card,0.75,{y:-30},{
   TweenMax.to(strike.node,1,{opacity:0,ease:Power4.easeOut,onComplete:function(){strike.remove()}}); }
 function changeWeather(w){ if(w.data) w=w.data; reset(); currentWeather=w;
   TweenMax.killTweensOf(summary); TweenMax.to(summary,0.6,{opacity:0,x:-30,onComplete:function(){ summary.text(w.name||w.type); updateSummaryText(); }, ease:Power4.easeIn});
-  container.addClass(w.type); $('#button-'+w.type).addClass('active');
-  // wind
+  container.addClass(w.type); var btn=$('#button-'+w.type); if(btn.length) btn.addClass('active');
   if(w.type==='wind') TweenMax.to(settings,3,{windSpeed:3,ease:Power2.easeInOut});
   else if(w.type==='sun') TweenMax.to(settings,3,{windSpeed:20,ease:Power2.easeInOut});
   else TweenMax.to(settings,3,{windSpeed:.5,ease:Power2.easeOut});
-  // rain
   if(w.type==='rain') TweenMax.to(settings,3,{rainCount:10,ease:Power2.easeInOut});
   else if(w.type==='thunder') TweenMax.to(settings,3,{rainCount:60,ease:Power2.easeInOut});
   else TweenMax.to(settings,1,{rainCount:0,ease:Power2.easeOut});
-  // leaves
   if(w.type==='wind') TweenMax.to(settings,3,{leafCount:5,ease:Power2.easeInOut}); else TweenMax.to(settings,1,{leafCount:0,ease:Power2.easeOut});
-  // snow
   if(w.type==='snow') TweenMax.to(settings,3,{snowCount:40,ease:Power2.easeInOut}); else TweenMax.to(settings,1,{snowCount:0,ease:Power2.easeOut});
-  // sun + burst
   if(w.type==='sun'){ TweenMax.to(sun.node,4,{x:sizes.card.width/2,y:sizes.card.height/2,ease:Power2.easeInOut});
     TweenMax.to(sunburst.node,4,{scale:1,opacity:.8,y:(sizes.card.height/2)+(sizes.card.offset.top),ease:Power2.easeInOut}); }
   else { TweenMax.to(sun.node,2,{x:sizes.card.width/2,y:-100,ease:Power2.easeInOut});
@@ -264,6 +397,5 @@ function changeWeather(w){ if(w.data) w=w.data; reset(); currentWeather=w;
   startLightningTimer();
 }
 </script>
-
 </body>
 </html>
