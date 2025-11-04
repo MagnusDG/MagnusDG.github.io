@@ -150,7 +150,10 @@ function changeWeather(w){if(w.data) w=w.data;reset();currentWeather=w;TweenMax.
 // ----------------- Open‑Meteo integration -----------------
 const chiayi = { lat: 23.4801, lon: 120.4491, label: 'Chiayi, Taiwan' };
 const apiBase = 'https://api.open-meteo.com/v1/forecast';
+// Primary reverse geocoder (Open‑Meteo) often OK, but some CDNs omit CORS on 404s
 const geocodeBase = 'https://geocoding-api.open-meteo.com/v1/reverse';
+// Fallback reverse geocoder with wide CORS support
+const geocodeFallback = 'https://nominatim.openstreetmap.org/reverse';
 const currentFields = 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m';
 
 const WMO_MAP = new Map([
@@ -204,8 +207,33 @@ function setDate(ts){
 }
 
 async function reverseGeocode(lat,lon){
+  // Try Open‑Meteo first
   try{
-    const url = `${geocodeBase}?latitude=${lat}&longitude=${lon}&language=en&format=json`;
+    const url = `${geocodeBase}?latitude=${lat}&longitude=${lon}&language=en`;
+    const j = await fetchJSON(url);
+    const r = j && j.results && j.results[0];
+    if(r){
+      const parts = [r.name, r.admin1, r.country].filter(Boolean);
+      return parts.join(', ');
+    }
+  }catch(e){ /* swallow and try fallback */ }
+  // Fallback to Nominatim (OSM). Respect usage policy by sending format and zoom only.
+  try{
+    const q = new URLSearchParams({format:'jsonv2',lat:String(lat),lon:String(lon)}).toString();
+    const url2 = `${geocodeFallback}?${q}`;
+    const j2 = await fetchJSON(url2,{ headers:{ 'Accept-Language':'en' } });
+    if(j2 && (j2.name || j2.display_name)){
+      const parts = [];
+      if(j2.name) parts.push(j2.name);
+      if(j2.address){
+        if(j2.address.state) parts.push(j2.address.state);
+        if(j2.address.country) parts.push(j2.address.country);
+      }
+      return parts.join(', ') || j2.display_name;
+    }
+  }catch(e){ /* final fallback below */ }
+  return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+}?latitude=${lat}&longitude=${lon}&language=en&format=json`;
     const j = await fetchJSON(url);
     const r = j && j.results && j.results[0];
     if(!r) return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
