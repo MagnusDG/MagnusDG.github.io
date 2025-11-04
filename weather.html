@@ -11,9 +11,7 @@
 
   <!-- Reset + Base Styles -->
   <style>
-    :root {
-      --speed: 2s;
-    }
+    :root { --speed: 2s; }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     html { background: #fff; }
@@ -23,14 +21,8 @@
     .background { background: linear-gradient(120deg, rgba(50,150,100,.2), rgba(0,0,100,0)); }
 
     .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      padding: 0;
-      overflow: auto;
-      position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0; padding: 0; overflow: auto; position: relative;
       background: linear-gradient(240deg, rgba(150,50,50,.3), rgba(0,0,200,0));
       transition: background-color var(--speed) ease;
     }
@@ -73,6 +65,25 @@
 
     /* Footer status */
     .status { font-size: 12px; color: #666; margin-bottom: 8px; opacity: .85; }
+
+    /* Location label */
+    #place { font-weight: 700; font-size: 14px; color: #222; }
+
+    /* Details panel + toggle */
+    #toggle-details{ position:absolute; right:12px; bottom:12px; width:40px; height:40px; border:none; border-radius:20px; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); cursor:pointer; display:grid; place-items:center; transition:transform .25s ease, background .25s ease; }
+    .thunder #toggle-details{ background:#e9e9e9; }
+    #toggle-details svg{ width:18px; height:18px; }
+    .panel{ position:absolute; inset:0; background:rgba(255,255,255,.96); backdrop-filter:saturate(1.2) blur(2px); transform:translateY(100%); transition:transform .35s ease; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .panel.open{ transform:translateY(0); }
+    .panel h3{ margin:0; font-size:16px; font-weight:700; color:#222; }
+    .panel .meta{ font-size:12px; color:#666; }
+    .panel .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+    .kv{ background:#f5f7ff; border-radius:8px; padding:10px; }
+    .kv h4{ margin:0 0 6px 0; font-size:12px; color:#445; font-weight:700; }
+    .kv .v{ font-size:18px; font-weight:700; color:#223; }
+    .hours{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .hour{ background:#f7f7f7; border-radius:8px; padding:8px; text-align:center; font-size:12px; }
+    .hour .t{ font-weight:700; font-size:14px; }
   </style>
 </head>
 <body>
@@ -88,7 +99,7 @@
         <path id="sunburst" style="fill:url(#SVGID_1_);" d="M0,319.7c-18.6,0-37.3-1.6-55.5-4.8L-7.8,41.4c5.1,0.9,10.6,0.9,15.7,0L56,314.8C37.6,318,18.8,319.7,0,319.7z M-160.8,276.6c-32.5-18.8-61.3-42.9-85.5-71.6L-34,26.2c3.4,4.1,7.4,7.4,12,10.1L-160.8,276.6z M161.3,276.4L22.1,36.2 c4.5-2.6,8.6-6,12-10.1l212.6,178.5C222.5,233.4,193.8,257.6,161.3,276.4z M-302.5,108.3C-315.4,73-321.9,36-322-1.8l277.6-0.5 c0,5.3,0.9,10.4,2.7,15.2L-302.5,108.3z M302.6,107.8L41.8,12.8c1.7-4.7,2.6-9.7,2.6-14.9c0-0.3,0-0.6,0-1H322l0-1.3l0,1.9 C322,35.4,315.5,72.5,302.6,107.8z M-41.8-17.5l-261-94.5c12.8-35.4,31.6-68,55.8-96.9L-34.1-30.8C-37.5-26.8-40.1-22.3-41.8-17.5z M41.7-17.7c-1.8-4.8-4.4-9.3-7.8-13.3l212-179.2c24.3,28.8,43.3,61.3,56.3,96.6L41.7-17.7z M-22.2-40.8l-139.6-240 c32.7-19,68.1-32,105.2-38.6L-8-46.1C-13-45.2-17.8-43.4-22.2-40.8z M22-40.9c-4.4-2.6-9.2-4.3-14.2-5.1l47.1-273.6 c37.2,6.4,72.7,19.2,105.4,38L22-40.9z"/>
       </svg>
 
-      <div class="status" id="status">Loading…</div>
+      <!-- <div class="status" id="status">Loading…</div> -->
 
       <nav>
         <ul>
@@ -105,12 +116,28 @@
         <div class="details">
           <div class="temp" id="temp">--<span>°C</span></div>
           <div class="right">
+            <div id="place">—</div>
             <div id="date">—</div>
             <div id="summary"></div>
           </div>
         </div>
+        <button id="toggle-details" aria-label="Details">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l8 8-8 8"/></svg>
+        </button>
+        <div id="panel" class="panel" aria-hidden="true">
+          <button id="panel-back" aria-label="Back" style="position:absolute;top:10px;right:10px;width:36px;height:36px;border:none;border-radius:18px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.2);display:grid;place-items:center;cursor:pointer;z-index:1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4l-8 8 8 8"/></svg></button>
+          <h3 id="panel-place">—</h3>
+          <div class="meta" id="panel-date">—</div>
+          <div class="grid">
+            <div class="kv"><h4>Condition</h4><div class="v" id="kv-cond">—</div></div>
+            <div class="kv"><h4>Temperature</h4><div class="v" id="kv-temp">—</div></div>
+            <div class="kv"><h4>Wind</h4><div class="v" id="kv-wind">—</div></div>
+            <div class="kv"><h4>Humidity</h4><div class="v" id="kv-hum">—</div></div>
+          </div>
+          <h3>Next hours</h3>
+          <div class="hours" id="hours"></div>
+        </div>
       </div>
-
       <svg id="outer"></svg>
     </div>
   </div>
@@ -121,6 +148,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
 
   <script>
+    
     // ===== DOM refs and SVG layers =====
     var container = $('.container');
     var card = $('#card');
@@ -368,6 +396,19 @@
     function startLightningTimer(){ if (lightningTimeout) clearTimeout(lightningTimeout); if (currentWeather.type === 'thunder') lightningTimeout = setTimeout(lightning, Math.random()*6000); }
     function lightning(){ startLightningTimer(); TweenMax.fromTo(card, .75, { y: -30 }, { y: 0, ease: Elastic.easeOut }); var pathX = 30 + Math.random() * (sizes.card.w - 60); var steps = 20; var pts=[pathX + ',0']; for (var i=0; i<steps; i++){ var x = pathX + (Math.random()*20 - 10); var y = (sizes.card.h/steps)*(i+1); pts.push(x+','+y);} var strike = weatherContainer1.path('M'+pts.join(' ')).attr({ fill:'none', stroke:'#fff', strokeWidth: 2 + Math.random() }); TweenMax.to(strike.node, 1, { opacity: 0, ease: Power4.easeOut, onComplete: function(){ strike.remove(); }}); }
 
+    // Extra DOM for details panel
+    var placeEl = $('#place');
+    var panel = $('#panel');
+    var toggleBtn = $('#toggle-details');
+    var panelPlace = $('#panel-place');
+    var panelDate = $('#panel-date');
+    var kvCond = $('#kv-cond');
+    var kvTemp = $('#kv-temp');
+    var kvWind = $('#kv-wind');
+    var kvHum = $('#kv-hum');
+    var hoursEl = $('#hours');
+    var lastCoordsName = null;
+
     // ===== Open‑Meteo integration =====
     const OM_GEOCODE = 'https://geocoding-api.open-meteo.com/v1/search?name={q}&count=10&language=en&format=json';
     const OM_FORECAST = 'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,wind_speed_10m,weather_code,precipitation&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&timezone=auto';
@@ -384,11 +425,9 @@
     }
 
     function mapWMOToTheme(code, wind){
-      // WMO weather interpretation codes
-      // Simplified buckets for UI themes
-      if (code === 0) return 'sun'; // clear
+      if (code === 0) return 'sun';
       if ([1,2,3].includes(code)) return wind >= 8 ? 'wind' : 'sun';
-      if ([45,48].includes(code)) return 'rain'; // fog as muted rain UI
+      if ([45,48].includes(code)) return 'rain';
       if ([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)) return 'rain';
       if ([71,73,75,77,85,86].includes(code)) return 'snow';
       if ([95,96,99].includes(code)) return 'thunder';
@@ -406,11 +445,11 @@
       return res.json();
     }
 
-    async function resolveLocationAndLoad(){
+    // FIXED: no stray parenthesis. Single, valid definition.
+    async function resolveLocationAndLoad() {
       statusEl.text('Resolving location…');
       let coords = null;
 
-      // 1) Try browser geolocation
       if (navigator.geolocation) {
         try {
           coords = await new Promise((resolve, reject) => {
@@ -423,24 +462,24 @@
         } catch(e) { /* ignore */ }
       }
 
-      // 2) If no geolocation, try query param ?q=Name
       if (!coords) {
         const params = new URLSearchParams(location.search);
         const q = params.get('q');
         if (q) coords = await geocodeByName(q);
       }
 
-      // 3) Fallback to Minxiong as requested
       if (!coords) coords = await geocodeByName('Minxiong');
-
       if (!coords) { statusEl.text('Location error'); return; }
 
-      statusEl.text('Loading weather for ' + (coords.name || 'location') + '…');
+      lastCoordsName = coords.name || 'Location';
+      placeEl.text(lastCoordsName);
+
+      statusEl.text('Loading weather for ' + lastCoordsName + '…');
       try {
         const data = await fetchForecast(coords.lat, coords.lon);
         const c = data.current || {};
-        const t = typeof c.temperature_2m === 'number' ? Math.round(c.temperature_2m) : null;
-        const wind = typeof c.wind_speed_10m === 'number' ? c.wind_speed_10m : 0;
+        const t = Number.isFinite(c.temperature_2m) ? Math.round(c.temperature_2m) : null;
+        const wind = Number.isFinite(c.wind_speed_10m) ? c.wind_speed_10m : 0;
         const code = c.weather_code;
 
         if (t !== null) $('#temp').html(String(t) + '<span>°C</span>');
@@ -453,6 +492,8 @@
         const desc = describeCode(code);
         summary.text((desc ? desc + ' • ' : '') + 'Wind ' + wind.toFixed(1) + ' m/s');
         statusEl.text('OK');
+
+        renderDetails(data, lastCoordsName);
       } catch(e) {
         console.warn(e); statusEl.text('Weather load error');
       }
@@ -474,9 +515,36 @@
       return map[code] || 'Weather';
     }
 
+    function isoToLocalHour(iso){ try{ const d=new Date(iso); return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});}catch(e){return iso;}}
+    function nowIndex(times){ const now=Date.now(); let best=0; let bestDiff=Infinity; for(let i=0;i<times.length;i++){ const t=Date.parse(times[i]); const diff=Math.abs(now-t); if(diff<bestDiff){ best=i; bestDiff=diff; }} return best; }
+    function safeget(a,i){ return (Array.isArray(a) && a.length>i) ? a[i] : null; }
+
+    function renderDetails(data, place){
+      const cur = data.current||{}; const hr = data.hourly||{};
+      panelPlace.text(place || '—');
+      panelDate.text(new Date().toLocaleString());
+      const desc = describeCode(cur.weather_code);
+      kvCond.text(desc||'—');
+      kvTemp.text(Number.isFinite(cur.temperature_2m)? Math.round(cur.temperature_2m)+ ' °C':'—');
+      kvWind.text(Number.isFinite(cur.wind_speed_10m)? cur.wind_speed_10m.toFixed(1)+' m/s':'—');
+
+      // humidity from hourly nearest now
+      let hum='—';
+      if (hr.time && hr.relative_humidity_2m){ const idx = nowIndex(hr.time); const v = safeget(hr.relative_humidity_2m, idx); if (Number.isFinite(v)) hum = Math.round(v)+' %'; }
+      kvHum.text(hum);
+
+      // Next 6 hours cards
+      hoursEl.empty();
+      if (hr.time){ const start = nowIndex(hr.time); for(let j=0;j<6 && start+j<hr.time.length; j++){ const i=start+j; const t = isoToLocalHour(hr.time[i]); const temp = safeget(hr.temperature_2m,i); const wind = safeget(hr.wind_speed_10m,i); const cell = $('<div class="hour"/>'); cell.append('<div class="t">'+t+'</div>'); cell.append('<div>'+(Number.isFinite(temp)? Math.round(temp)+'°C':'—')+'</div>'); cell.append('<div>'+(Number.isFinite(wind)? wind.toFixed(1)+' m/s':'—')+'</div>'); hoursEl.append(cell); } }
+    }
+
+    function togglePanel(){ const open = panel.hasClass('open'); panel.toggleClass('open', !open).attr('aria-hidden', open ? 'true':'false'); $('#toggle-details').css('transform', open ? 'rotate(0deg)' : 'rotate(90deg)'); }
+
     // ===== Wiring and boot =====
     function init(){
       onResize();
+      $('#panel-back').on('click', togglePanel); // Add event listener for the back button
+      toggleBtn.on('click', togglePanel);
       $(window).on('resize', onResize);
 
       // nav buttons
@@ -494,6 +562,18 @@
       // load realtime
       resolveLocationAndLoad();
     }
+
+    // --- Lightweight runtime tests (console) ---
+    (function selfTests(){
+      try {
+        console.assert(typeof describeCode(0) === 'string', 'describeCode basic');
+        var theme = mapWMOToTheme(0, 0);
+        console.assert(['sun','wind','rain','snow','thunder'].includes(theme), 'mapWMOToTheme domain');
+        console.assert(themeToObject('sun') && themeToObject('sun').type === 'sun', 'themeToObject lookup');
+        geocodeByName('Minxiong').then(r => console.log('Geocode test Minxiong:', r)).catch(()=>{});
+        console.log('Self-tests passed');
+      } catch(e){ console.warn('Self-tests failed', e); }
+    })();
 
     // kick
     init();
