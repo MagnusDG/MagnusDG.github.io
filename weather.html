@@ -222,17 +222,49 @@ async function fetchOpenMeteo(lat,lon){
 }
 
 // Google Geocoding theo tên TP
+// --- Geocode with Google → fallback Open-Meteo → Chiayi ---
 async function geocodeByName(name){
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${encodeURIComponent(GOOGLE_KEY)}`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error('geocode failed');
-  const j = await r.json();
-  if (j.results && j.results.length){
-    const g = j.results[0].geometry.location; // {lat, lng}
-    return { lat: g.lat, lon: g.lng, source: `geocode:${name}` };
+  // 1) Google Geocoding (ưu tiên)
+  try{
+    const url = `https://maps.googleapis.com/maps/api/geocode/json` +
+      `?address=${encodeURIComponent(name)}` +
+      `&language=vi&region=tw&components=country:TW` +
+      `&key=${encodeURIComponent(GOOGLE_KEY)}`;
+    const r = await fetch(url, {mode:'cors'});
+    if(!r.ok) throw new Error('google geocode http ' + r.status);
+    const j = await r.json();
+    if (j.status === 'OK' && j.results && j.results.length){
+      const g = j.results[0].geometry.location;
+      setStatus(`Geocode[Google]: ${j.results[0].formatted_address}`);
+      return { lat: g.lat, lon: g.lng, source: 'google' };
+    }
+    throw new Error('google geocode status ' + j.status);
+  }catch(e){
+    console.warn('Google geocode failed:', e);
   }
-  throw new Error('geocode empty');
+
+  // 2) Open-Meteo Geocoding (không cần key)
+  try{
+    const url = `https://geocoding-api.open-meteo.com/v1/search` +
+      `?name=${encodeURIComponent(name)}&count=1&language=vi`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('open-meteo geocode http ' + r.status);
+    const j = await r.json();
+    if (j && j.results && j.results.length){
+      const g = j.results[0];
+      setStatus(`Geocode[Open-Meteo]: ${g.name}, ${g.country_code}`);
+      return { lat: g.latitude, lon: g.longitude, source: 'open-meteo' };
+    }
+    throw new Error('open-meteo geocode empty');
+  }catch(e){
+    console.warn('Open-Meteo geocode failed:', e);
+  }
+
+  // 3) Hard fallback: Chiayi
+  setStatus('Geocode fallback → Chiayi');
+  return { lat: 23.4801, lon: 120.4491, source: 'fallback-chiayi' };
 }
+
 
 // Map Google Weather → animation
 function mapGoogleToAnim(wType, windKmh, precipMm, snowMm){
