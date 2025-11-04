@@ -150,11 +150,9 @@ function changeWeather(w){if(w.data) w=w.data;reset();currentWeather=w;TweenMax.
 // ----------------- Open‑Meteo integration -----------------
 const chiayi = { lat: 23.4801, lon: 120.4491, label: 'Chiayi, Taiwan' };
 const apiBase = 'https://api.open-meteo.com/v1/forecast';
-// Primary reverse geocoder (Open‑Meteo) often OK, but some CDNs omit CORS on 404s
 const geocodeBase = 'https://geocoding-api.open-meteo.com/v1/reverse';
-// Fallback reverse geocoder with wide CORS support
-const geocodeFallback = 'https://nominatim.openstreetmap.org/reverse';
-const currentFields = 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m';
+const geocodeSearchBase = 'https://geocoding-api.open-meteo.com/v1/search';
+const currentFields = 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m'; = 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m';
 
 const WMO_MAP = new Map([
   // Weather code -> [type, label]
@@ -207,9 +205,36 @@ function setDate(ts){
 }
 
 async function reverseGeocode(lat,lon){
-  // Try Open‑Meteo first
+  // Prefer Open‑Meteo reverse; if it fails, fall back to OSM Nominatim
   try{
-    const url = `${geocodeBase}?latitude=${lat}&longitude=${lon}&language=en`;
+    const url = `${geocodeBase}?latitude=${lat}&longitude=${lon}&language=en&format=json`;
+    const j = await fetchJSON(url);
+    const r = j && j.results && j.results[0];
+    if(r){
+      const parts = [r.name, r.admin1, r.country].filter(Boolean);
+      return parts.join(', ');
+    }
+  }catch(e){ /* fallback below */ }
+  try{
+    const q = new URLSearchParams({format:'jsonv2',lat:String(lat),lon:String(lon)}).toString();
+    const url2 = `https://nominatim.openstreetmap.org/reverse?${q}`;
+    const j2 = await fetchJSON(url2,{ headers:{ 'Accept-Language':'en' } });
+    if(j2 && (j2.name || j2.display_name)){
+      const parts = [];
+      if(j2.name) parts.push(j2.name);
+      if(j2.address){ if(j2.address.state) parts.push(j2.address.state); if(j2.address.country) parts.push(j2.address.country); }
+      return parts.join(', ') || j2.display_name;
+    }
+  }catch(e){ }
+  return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+}
+async function geocodeByName(name){
+  const url = `${geocodeSearchBase}?name=${encodeURIComponent(name)}&count=1&language=en&format=json`;
+  const j = await fetchJSON(url);
+  const r = j && j.results && j.results[0];
+  if(!r) throw new Error('Place not found');
+  return { lat:r.latitude, lon:r.longitude, label:[r.name, r.admin1, r.country].filter(Boolean).join(', ') };
+}?latitude=${lat}&longitude=${lon}&language=en`;
     const j = await fetchJSON(url);
     const r = j && j.results && j.results[0];
     if(r){
@@ -278,8 +303,28 @@ async function updateFromOpenMeteo(lat, lon){
 
 function locateAndLoad(){
   setDate();
+  // Support forward geocoding via URL: ?q=Chiayi
+  const params = new URLSearchParams(location.search);
+  const q = params.get('q');
+  if(q){
+    geocodeByName(q).then(({lat,lon,label})=>{ locEl.text(label); updateFromOpenMeteo(lat,lon); }).catch(_=>{ locEl.text(chiayi.label+' (fallback)'); updateFromOpenMeteo(chiayi.lat,chiayi.lon); });
+    return;
+  }
   if(navigator.geolocation){
     const opts = { enableHighAccuracy:true, timeout:8000, maximumAge:300000 };
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      const { latitude:lat, longitude:lon } = pos.coords;
+      await updateFromOpenMeteo(lat,lon);
+      locEl.text(await reverseGeocode(lat,lon));
+    }, async _err=>{
+      locEl.text(chiayi.label+' (fallback)');
+      await updateFromOpenMeteo(chiayi.lat,chiayi.lon);
+    }, opts);
+  }else{
+    locEl.text(chiayi.label+' (fallback)');
+    updateFromOpenMeteo(chiayi.lat,chiayi.lon);
+  }
+};
     navigator.geolocation.getCurrentPosition(async pos=>{
       const { latitude:lat, longitude:lon } = pos.coords;
       await updateFromOpenMeteo(lat,lon);
