@@ -10,81 +10,87 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css" rel="stylesheet" />
 
   <!-- Reset + Base Styles -->
-  <style>
-    :root { --speed: 2s; }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    html { background: #fff; }
-    body { margin: 0; font-family: 'Lato', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  <style id="dark-overrides">
+  :root{
+    --bg-card:#0b0f14;         /* đen */
+    --bg-panel:rgba(8,8,12,.96);
+    --text:#e6e6e6;
+    --muted:#9aa4b2;
+    --accent:#6cf;
+  }
 
-    .background, .container { width: 100%; height: 100%; }
-    .background { background: linear-gradient(120deg, rgba(50,150,100,.2), rgba(0,0,100,0)); }
+  /* Nền trang minh bạch để embed */
+  html, body, .background, .container { background: transparent !important; }
+  html { background: transparent !important; }
+  body { color: var(--text); }
 
-    .container {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      margin: 0; padding: 0; overflow: auto; position: relative;
-      background: linear-gradient(240deg, rgba(150,50,50,.3), rgba(0,0,200,0));
-      transition: background-color var(--speed) ease;
-    }
+  /* Card tối */
+  #card{
+    background: var(--bg-card) !important;
+    border: 1px solid rgba(255,255,255,.06);
+    box-shadow: 0 12px 40px rgba(0,0,0,.6);
+  }
 
-    nav ul { margin: 20px; padding: 0; list-style: none; display: flex; gap: 8px; }
-    nav li a { display: block; width: 50px; text-align: center; color: #888; cursor: pointer; text-decoration: none; }
-    nav li a:hover { color: #444; }
-    nav li a.active { color: #44f; }
+  /* Vô hiệu gradient nền theo “weather theme” → giữ màu đen */
+  .weather,
+  .thunder .weather,
+  .rain .weather,
+  .sun .weather{ background-color: var(--bg-card) !important; }
 
-    #card { box-shadow: 9px 7px 40px -6px rgba(0,0,0,.25); width: 320px; height: 420px; min-height: 300px; margin: 20px; border-radius: 8px; position: relative; overflow: hidden; }
+  /* Overlay trong card mờ nhẹ cho chiều sâu */
+  #inner{
+    background: linear-gradient(to bottom, rgba(255,255,255,.06) 50%, rgba(255,255,255,0) 100%) !important;
+  }
 
-    /* Weather theme backgrounds */
-    .weather { background-color: #DAE3FD; transition: background-color var(--speed) ease; }
-    .thunder .weather { background-color: #9FA4AD; }
-    .rain .weather { background-color: #D8D8D8; }
-    .sun .weather { background-color: #cce; }
+  /* Typography */
+  .details{ color: var(--text) !important; }
+  #summary{ color: var(--text) !important; }
+  #date{ color: var(--muted) !important; }
+  #place{ color: var(--text) !important; }
+  .status{ color: var(--muted) !important; }
 
-    #inner { background: linear-gradient(to bottom, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%); }
+  /* Nav icons */
+  nav li a{ color:#aab4c0 !important; }
+  nav li a:hover{ color:#e6eef8 !important; }
+  nav li a.active{ color:var(--accent) !important; }
 
-    /* Clouds tint per theme */
-    .cloud { transition: fill var(--speed) ease; }
-    #cloud1 { fill: #efefef; }
-    .thunder #cloud1 { fill: #9FA4AD; }
-    #cloud2 { fill: #E6E6E6; }
-    .thunder #cloud2 { fill: #8B8E98; }
-    #cloud3 { fill: #D5D5D5; }
-    .thunder #cloud3 { fill: #7B7988; }
+  /* Clouds giữ tông sáng để nổi trên nền đen */
+  .cloud{ fill:#cfd8dc !important; opacity:.95; transition: fill var(--speed) ease; }
+  .thunder #cloud1, .thunder #cloud2, .thunder #cloud3{ fill:#b0bec5 !important; }
 
-    /* Details overlay */
-    .details { position: absolute; inset: 0 auto auto 0; right: 0; padding: 16px 20px; color: #666; display: flex; justify-content: space-between; gap: 12px; }
-    .thunder .details { color: #ddd; }
-    .right { text-align: right; }
-    .temp { font-size: 60px; line-height: 60px; }
-    .temp span { font-size: 18px; line-height: 30px; vertical-align: top; margin-left: 5px; }
-    #date { margin: 4px 0; font-size: 14px; color: #777; }
-    #summary { font-weight: 700; font-size: 20px; color: #333; }
+  /* Nút toggle và back */
+  #toggle-details{
+    background:#121621 !important; color:var(--text);
+    box-shadow:0 6px 16px rgba(0,0,0,.5);
+  }
+  .thunder #toggle-details{ background:#171b25 !important; }
+  #panel-back{
+    background:#121621 !important; color:var(--text) !important;
+    box-shadow:0 4px 10px rgba(0,0,0,.5) !important;
+  }
 
-    /* Fixed SVG layers */
-    #outer, #back { position: fixed; inset: 0; pointer-events: none; }
+  /* Panel chi tiết tối */
+  .panel{
+    background: var(--bg-panel) !important;
+    color: var(--text) !important;
+  }
+  .kv{
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius:8px;
+  }
+  .kv h4{ color:#a0aec0 !important; }
+  .kv .v{ color:#f1f5f9 !important; }
+  .hour{
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(255,255,255,.06);
+    color: var(--text) !important;
+  }
 
-    /* Footer status */
-    .status { font-size: 12px; color: #666; margin-bottom: 8px; opacity: .85; }
-
-    /* Location label */
-    #place { font-weight: 700; font-size: 14px; color: #222; }
-
-    /* Details panel + toggle */
-    #toggle-details{ position:absolute; right:12px; bottom:12px; width:40px; height:40px; border:none; border-radius:20px; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); cursor:pointer; display:grid; place-items:center; transition:transform .25s ease, background .25s ease; }
-    .thunder #toggle-details{ background:#e9e9e9; }
-    #toggle-details svg{ width:18px; height:18px; }
-    .panel{ position:absolute; inset:0; background:rgba(255,255,255,.96); backdrop-filter:saturate(1.2) blur(2px); transform:translateY(100%); transition:transform .35s ease; padding:16px; display:flex; flex-direction:column; gap:10px; }
-    .panel.open{ transform:translateY(0); }
-    .panel h3{ margin:0; font-size:16px; font-weight:700; color:#222; }
-    .panel .meta{ font-size:12px; color:#666; }
-    .panel .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-    .kv{ background:#f5f7ff; border-radius:8px; padding:10px; }
-    .kv h4{ margin:0 0 6px 0; font-size:12px; color:#445; font-weight:700; }
-    .kv .v{ font-size:18px; font-weight:700; color:#223; }
-    .hours{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-    .hour{ background:#f7f7f7; border-radius:8px; padding:8px; text-align:center; font-size:12px; }
-    .hour .t{ font-weight:700; font-size:14px; }
-  </style>
+  /* Lớp SVG nền để không lấn chiếm khi embed */
+  #outer, #back{ opacity:.75; }
+  #sunburst{ opacity:.25 !important; }
+</style>
 </head>
 <body>
   <div class="background">
