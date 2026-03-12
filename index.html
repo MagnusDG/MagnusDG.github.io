@@ -1,127 +1,2420 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Morphing Banner</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@900&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4f6ef7">
+<link rel="manifest" href="manifest.json">
+<title>TOCFL 華語詞彙練習</title>
 <style>
-  :root { --size: 80pt; }
-  html, body {
-    height: 100%;
-    margin: 0;
-    background: transparent; /* quan trọng để Notion không đen thui */
+  :root {
+    --bg: #f0f4ff;
+    --surface: #ffffff;
+    --surface2: #f7f9ff;
+    --border: #dde3f4;
+    --text: #1a1d2e;
+    --text2: #5a6080;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --green: #16a34a;
+    --red: #dc2626;
+    --yellow: #d97706;
+    --card-front: #4f6ef7;
+    --card-back: #7c3aed;
+    --shadow: 0 4px 24px rgba(79,110,247,0.10);
+    --radius: 16px;
   }
-  #container {
-    position: relative;
-    width: 100vw;
-    height: 140px;           /* chỉnh tùy ý: 120–160px */
-    margin: 0 auto;
-    filter: url(#threshold) blur(0.6px);
-    overflow: hidden;
+  [data-theme="dark"] {
+    --bg: #12131f;
+    --surface: #1e2035;
+    --surface2: #252742;
+    --border: #2e3250;
+    --text: #e8eaff;
+    --text2: #8b92b8;
+    --accent: #6b89ff;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
   }
-  #text1, #text2 {
-    position: absolute;
-    inset: 0;
-    display: inline-block;
-    font-family: 'Raleway', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-    font-size: var(--size);
-    line-height: 140px;      /* khớp với chiều cao container */
-    text-align: center;
-    user-select: none;
-    color: #fff;             /* trắng để nổi trên nền Notion dark; nếu nền sáng, đổi thành #111 */
-    will-change: filter, opacity;
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
   }
-  /* co nhỏ trên màn hình hẹp */
+
+  /* ── TOP NAV ── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .nav-brand span { color: var(--text2); font-weight: 400; font-size: 0.85rem; margin-left: 8px; }
+  .nav-right { display: flex; gap: 10px; align-items: center; }
+  .btn-icon {
+    background: none; border: none; cursor: pointer; font-size: 1.2rem;
+    color: var(--text2); padding: 6px; border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .btn-icon:hover { background: var(--surface2); }
+  .btn-lang { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--text2); transition: all 0.18s; letter-spacing: 0.04em; }
+  .btn-lang:hover { border-color: var(--accent); color: var(--accent); }
+  .stats-badge {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: var(--text2);
+    display: flex; gap: 8px;
+  }
+  .stats-badge .s-known { color: var(--green); font-weight: 700; }
+  .stats-badge .s-star { color: var(--yellow); font-weight: 700; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── HOME ── */
+  #home { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  /* ── MODE TABS ── */
+  .mode-tabs { display: flex; gap: 8px; padding: 0 0 16px; overflow-x: auto; scrollbar-width: none; }
+  .mode-tabs::-webkit-scrollbar { display: none; }
+  .mode-tab { flex: 1; min-width: 72px; padding: 10px 6px; border-radius: 14px; border: 2px solid var(--border); background: var(--surface); color: var(--text2); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.18s; text-align: center; line-height: 1.3; }
+  .tab-icon { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+  .mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .mode-tab:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+  /* ── FILTER ACCORDION ── */
+  .filter-accordion { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; box-shadow: var(--shadow); }
+  .filter-accordion summary { padding: 13px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; user-select: none; list-style: none; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+  .filter-accordion summary::-webkit-details-marker { display: none; }
+  .filter-accordion[open] summary { border-bottom: 1.5px solid var(--border); }
+  .filter-body { padding: 4px 16px 16px; }
+  .filter-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); margin: 12px 0 7px; }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 0.83rem; cursor: pointer; transition: all 0.18s; user-select: none; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .chip.all.active { background: var(--accent2); border-color: var(--accent2); }
+
+  .quiz-sub { margin-top: 4px; }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-opt { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.82rem; transition: all 0.18s; background: var(--surface2); }
+  .radio-opt input { accent-color: var(--accent); }
+  .radio-opt:hover { border-color: var(--accent); }
+
+  .opts-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 2px; margin-bottom: 2px; }
+  .opt-toggle { display: flex; align-items: center; gap: 6px; padding: 6px 11px; border: 1.5px solid var(--border); border-radius: 9px; cursor: pointer; background: var(--surface2); font-size: 0.82rem; color: var(--text2); transition: all 0.18s; }
+  .opt-toggle input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; }
+  .opt-toggle:hover { border-color: var(--accent); }
+
+  /* ── DECK START ROW ── */
+  .deck-start-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .deck-info-compact { text-align: center; min-width: 80px; flex-shrink: 0; }
+  .deck-count-val { font-size: 2rem; font-weight: 800; color: var(--accent); display: block; line-height: 1; }
+  .deck-words-lbl { font-size: 0.78rem; color: var(--text2); }
+  .btn-start { flex: 1; padding: 15px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 20px rgba(79,110,247,0.35); }
+  .btn-start:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn-start:active { transform: translateY(0); }
+  .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── QUICK LINKS ── */
+  .quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-ql { padding: 11px 10px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.18s; text-align: center; }
+  .btn-ql:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+  .btn-ql.danger { color: var(--red); }
+  .btn-ql.danger:hover { border-color: var(--red); background: #fee2e222; }
+
+  /* ── PROGRESS SECTION ── */
+  .progress-section { background: var(--surface); border-radius: var(--radius); padding: 16px 20px 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .prog-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .prog-stat { text-align: center; padding: 12px; background: var(--surface2); border-radius: 10px; }
+  .prog-stat .val { font-size: 1.5rem; font-weight: 800; }
+  .prog-stat .lbl { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
+  .prog-stat.known .val { color: var(--green); }
+  .prog-stat.unknown .val { color: var(--red); }
+  .prog-stat.starred .val { color: var(--yellow); }
+  .prog-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 14px; overflow: hidden; }
+  .prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.5s; }
+  .prog-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-sm {
+    padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--surface2); color: var(--text2); font-size: 0.8rem; cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── FLASHCARD VIEW ── */
+  #flashcard { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .fc-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .btn-back {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 8px 14px; cursor: pointer; font-size: 0.85rem; color: var(--text2);
+    display: flex; align-items: center; gap: 6px; transition: all 0.18s;
+  }
+  .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+  .fc-progress-text { flex: 1; text-align: center; font-size: 0.85rem; color: var(--text2); }
+  .fc-progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 24px; }
+  .fc-progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.3s; }
+
+  .card-container { perspective: 1000px; height: 320px; margin-bottom: 20px; cursor: pointer; }
+  .card-inner {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .card-inner.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; width: 100%; height: 100%; border-radius: 20px;
+    backface-visibility: hidden; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px; box-shadow: var(--shadow);
+  }
+  .card-front { background: linear-gradient(135deg, #4f6ef7, #7c3aed); color: #fff; }
+  .card-back { background: var(--surface); transform: rotateY(180deg); border: 2px solid var(--border); }
+  .card-word { font-size: 3.8rem; font-weight: 800; margin-bottom: 12px; letter-spacing: 2px; }
+  .card-hint { font-size: 0.85rem; opacity: 0.7; }
+  .card-zhuyin { font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; font-weight: 600; }
+  .card-pinyin { font-size: 1.3rem; color: var(--accent2); font-weight: 700; margin-bottom: 16px; }
+  .card-def { font-size: 0.95rem; color: var(--text2); text-align: center; line-height: 1.6; max-height: 120px; overflow-y: auto; }
+  .card-level-badge {
+    position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.2);
+    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600;
+  }
+  .card-back .card-level-badge { background: var(--surface2); color: var(--text2); }
+  .card-star {
+    position: absolute; top: 14px; left: 14px; font-size: 1.2rem; cursor: pointer;
+    opacity: 0.7; transition: all 0.2s; background: none; border: none; color: inherit;
+  }
+  .card-star:hover, .card-star.active { opacity: 1; }
+  .card-star.active { color: #fbbf24; }
+
+  .fc-hint { text-align: center; font-size: 0.8rem; color: var(--text2); margin-bottom: 20px; }
+  .fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fc-actions.three { grid-template-columns: 1fr 1fr 1fr; }
+  .btn-action {
+    padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+    font-size: 0.95rem; font-weight: 600; transition: all 0.18s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .btn-action .sub { font-size: 0.72rem; opacity: 0.75; font-weight: 400; }
+  .btn-know { background: #dcfce7; color: var(--green); }
+  .btn-know:hover { background: var(--green); color: #fff; transform: translateY(-2px); }
+  .btn-unknown { background: #fee2e2; color: var(--red); }
+  .btn-unknown:hover { background: var(--red); color: #fff; transform: translateY(-2px); }
+  .btn-skip { background: var(--surface2); color: var(--text2); border: 1.5px solid var(--border); }
+  .btn-skip:hover { background: var(--border); transform: translateY(-2px); }
+  [data-theme="dark"] .btn-know { background: #16a34a22; }
+  [data-theme="dark"] .btn-unknown { background: #dc262622; }
+
+  .fc-end {
+    text-align: center; padding: 40px 20px;
+    background: var(--surface); border-radius: 20px; box-shadow: var(--shadow);
+  }
+  .fc-end .big { font-size: 3rem; margin-bottom: 12px; }
+  .fc-end h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+  .fc-end p { color: var(--text2); margin-bottom: 24px; }
+  .fc-end-stats { display: flex; gap: 16px; justify-content: center; margin-bottom: 24px; }
+  .fc-end-stat { text-align: center; }
+  .fc-end-stat .val { font-size: 2rem; font-weight: 800; }
+  .fc-end-stat .lbl { font-size: 0.78rem; color: var(--text2); }
+  .fc-end-stat.k .val { color: var(--green); }
+  .fc-end-stat.u .val { color: var(--red); }
+  .fc-end-stat.s .val { color: var(--yellow); }
+  .fc-end-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    padding: 12px 24px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-secondary {
+    padding: 12px 24px; background: var(--surface2); color: var(--text2);
+    border: 1.5px solid var(--border); border-radius: 12px; font-size: 0.95rem; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── QUIZ VIEW ── */
+  #quiz { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .quiz-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .quiz-progress-text { flex: 1; text-align: center; font-size: 0.85rem; color: var(--text2); }
+  .quiz-score-badge {
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; font-size: 0.8rem;
+    display: flex; gap: 10px;
+  }
+  .quiz-score-badge .qs { color: var(--green); font-weight: 700; }
+  .quiz-score-badge .qe { color: var(--red); font-weight: 700; }
+
+  .quiz-progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 24px; }
+  .quiz-progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.3s; }
+
+  .quiz-question {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 20px; padding: 36px 28px; text-align: center; color: #fff; margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .quiz-prompt { font-size: 0.8rem; opacity: 0.8; margin-bottom: 12px; letter-spacing: 0.05em; }
+  .quiz-word { font-size: 3.2rem; font-weight: 800; margin-bottom: 8px; }
+  .quiz-pinyin { font-size: 1rem; opacity: 0.85; font-weight: 500; }
+  .quiz-def-prompt { font-size: 1rem; line-height: 1.6; font-weight: 500; }
+
+  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .quiz-opt {
+    padding: 14px 16px; border-radius: 14px; border: 2px solid var(--border);
+    background: var(--surface); cursor: pointer; transition: all 0.18s;
+    font-size: 0.88rem; line-height: 1.5; text-align: left;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+  .quiz-opt .opt-letter {
+    background: var(--surface2); border-radius: 6px; padding: 2px 8px;
+    font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2);
+  }
+  .quiz-opt.correct { border-color: var(--green); background: #dcfce7; color: var(--green); }
+  .quiz-opt.correct .opt-letter { background: var(--green); color: #fff; }
+  .quiz-opt.wrong { border-color: var(--red); background: #fee2e2; color: var(--red); }
+  .quiz-opt.wrong .opt-letter { background: var(--red); color: #fff; }
+  .quiz-opt:disabled { cursor: default; }
+  [data-theme="dark"] .quiz-opt.correct { background: #16a34a22; color: #4ade80; }
+  [data-theme="dark"] .quiz-opt.wrong { background: #dc262622; color: #f87171; }
+
+  .quiz-feedback {
+    background: var(--surface); border-radius: 14px; border: 2px solid var(--border);
+    padding: 16px 20px; margin-bottom: 20px; display: none;
+  }
+  .quiz-feedback.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .feedback-icon { font-size: 1.8rem; }
+  .feedback-text { flex: 1; }
+  .feedback-text strong { display: block; margin-bottom: 3px; }
+  .feedback-text span { font-size: 0.82rem; color: var(--text2); }
+  .btn-next {
+    padding: 10px 20px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;
+    font-size: 0.9rem; flex-shrink: 0;
+  }
+
+  /* ── REVIEW VIEW (starred / unknown) ── */
+  #review { max-width: 680px; margin: 0 auto; padding: 24px 20px; }
+  .review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .review-header h2 { flex: 1; font-size: 1.2rem; font-weight: 800; }
+  .word-list { display: flex; flex-direction: column; gap: 8px; }
+  .word-item {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+    transition: box-shadow 0.18s;
+  }
+  .word-item:hover { box-shadow: var(--shadow); }
+  .wi-word { font-size: 1.5rem; font-weight: 800; min-width: 70px; }
+  .wi-info { flex: 1; }
+  .wi-pinyin { font-size: 0.9rem; color: var(--accent); font-weight: 600; margin-bottom: 2px; }
+  .wi-def { font-size: 0.8rem; color: var(--text2); line-height: 1.4; }
+  .wi-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .badge {
+    font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+  }
+  .badge.star { background: #fef3c7; color: var(--yellow); border-color: #fde68a; }
+  .badge.unknown { background: #fee2e2; color: var(--red); border-color: #fecaca; }
+  [data-theme="dark"] .badge.star { background: #d97706; color: #fff; }
+  [data-theme="dark"] .badge.unknown { background: #dc2626; color: #fff; }
+  .wi-actions { display: flex; gap: 6px; }
+  .btn-wi { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 0.8rem; color: var(--text2); transition: all 0.18s; }
+  .btn-wi:hover { border-color: var(--accent); color: var(--accent); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+  /* ── LOADING ── */
+  #loading {
+    position: fixed; inset: 0; background: var(--bg); display: flex;
+    flex-direction: column; align-items: center; justify-content: center; z-index: 999;
+  }
+  .spinner {
+    width: 48px; height: 48px; border: 4px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 0.95rem; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #1a1d2e; color: #fff; padding: 12px 22px; border-radius: 30px;
+    font-size: 0.88rem; font-weight: 500; z-index: 1000; opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1); pointer-events: none;
+    white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── KEYBOARD SHORTCUT HINT ── */
+  .key-hints { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .key-hint { font-size: 0.75rem; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+  .key { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 0.72rem; }
+
+  /* ── RESPONSIVE ── */
   @media (max-width: 480px) {
-    :root { --size: 48pt; }
-    #container { height: 100px; }
-    #text1, #text2 { line-height: 100px; }
+    .fc-actions.three { grid-template-columns: 1fr 1fr; }
+    .quiz-options { grid-template-columns: 1fr; }
+    .card-word { font-size: 2.8rem; }
+    .quiz-word { font-size: 2.4rem; }
+    .deck-start-row { flex-direction: column; align-items: stretch; }
+    .deck-info-compact { display: flex; align-items: baseline; gap: 6px; justify-content: center; }
+    .deck-count-val { font-size: 1.6rem; }
+    .mode-tab { min-width: 60px; }
   }
+  /* ── SEARCH ── */
+  .search-wrap { position: relative; margin-bottom: 20px; }
+  .search-input { width: 100%; padding: 12px 16px 12px 44px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text2); }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none; }
+  .search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text2); font-size: 1rem; display: none; padding: 4px 6px; border-radius: 6px; }
+  .search-clear.show { display: block; }
+  .search-clear:hover { background: var(--surface2); }
+  /* ── SEARCH RESULTS ── */
+  .search-results { display: none; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--border); margin-top: 8px; margin-bottom: 16px; }
+  .search-results.show { display: block; }
+  .sr-meta { padding: 8px 12px 4px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .sr-count { font-size: 0.78rem; font-weight: 700; color: var(--text2); }
+  .sr-hint { font-size: 0.72rem; color: var(--text2); margin-top: 2px; opacity: 0.75; }
+  .sr-list { max-height: 310px; overflow-y: auto; background: var(--surface); }
+  .sr-item { display: flex; align-items: baseline; gap: 8px; padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  .sr-item:last-child { border-bottom: none; }
+  .sr-item:hover, .sr-item:active { background: var(--surface2); }
+  .sr-word { font-size: 1.05rem; font-weight: 800; color: var(--text); flex-shrink: 0; min-width: 40px; }
+  .sr-pin  { font-size: 0.78rem; color: var(--accent); flex-shrink: 0; min-width: 80px; }
+  .sr-def  { font-size: 0.78rem; color: var(--text2); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  /* ── STREAK ── */
+  .streak-pill { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #f97316, #ef4444); color: #fff; border-radius: 20px; padding: 3px 9px; font-size: 0.78rem; font-weight: 700; cursor: default; }
+  /* ── SESSION SIZE ── */
+  .session-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 0.85rem; color: var(--text2); flex-wrap: wrap; }
+  .session-row input[type=number] { width: 66px; padding: 5px 8px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 0.9rem; text-align: center; outline: none; }
+  .session-row input[type=number]:focus { border-color: var(--accent); }
+  /* ── TTS ── */
+  .btn-tts { background: rgba(255,255,255,0.18); border: none; border-radius: 20px; padding: 5px 14px; color: #fff; font-size: 0.82rem; cursor: pointer; transition: background 0.18s; margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-tts:hover { background: rgba(255,255,255,0.32); }
+  .btn-tts.busy { opacity: 0.5; pointer-events: none; }
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.22s; }
+  @media(min-width:500px){ .modal-overlay { align-items: center; } }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal-box { background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 24px 40px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 -8px 40px rgba(0,0,0,0.25); transform: translateY(24px); transition: transform 0.25s; }
+  @media(min-width:500px){ .modal-box { border-radius: 20px; transform: scale(0.96); } }
+  .modal-overlay.show .modal-box { transform: translateY(0) scale(1); }
+  .modal-title { font-size: 1.1rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-close { background: var(--surface2); border: none; border-radius: 8px; padding: 4px 10px; cursor: pointer; color: var(--text2); font-size: 1rem; }
+  .modal-sec { margin-bottom: 22px; }
+  .modal-sec h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2); margin-bottom: 10px; font-weight: 700; }
+  .modal-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .btn-m { padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.18s; }
+  .btn-m.pri { background: var(--accent); color: #fff; }
+  .btn-m.sec { background: var(--surface2); color: var(--text2); border: 1.5px solid var(--border); }
+  .btn-m:hover { opacity: 0.85; }
+  .modal-inp { flex: 1; min-width: 0; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-size: 0.85rem; outline: none; }
+  .modal-inp:focus { border-color: var(--accent); }
+  /* ── AI WORD ANALYSIS ── */
+  .ai-ex { background: var(--surface2); border-radius: 12px; padding: 14px; margin-top: 10px; display: none; }
+  .ai-ex.show { display: block; }
+  .fc-ai-wrap { margin-top: 14px; }
+  .ai-card { display: flex; flex-direction: column; }
+  .ai-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .ai-row:first-child { padding-top: 0; }
+  .ai-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .ai-tag { font-size: 0.66rem; font-weight: 800; padding: 2px 7px; border-radius: 20px; flex-shrink: 0; margin-top: 3px; letter-spacing: 0.05em; white-space: nowrap; }
+  .ai-tag-blue   { background: #dbeafe; color: #1d4ed8; }
+  .ai-tag-purple { background: #ede9fe; color: #6d28d9; }
+  .ai-tag-green  { background: #dcfce7; color: #15803d; }
+  .ai-tag-orange { background: #ffedd5; color: #c2410c; }
+  [data-theme="dark"] .ai-tag-blue   { background: #1e3a5f; color: #93c5fd; }
+  [data-theme="dark"] .ai-tag-purple { background: #3b1e6e; color: #c4b5fd; }
+  [data-theme="dark"] .ai-tag-green  { background: #14532d; color: #4ade80; }
+  [data-theme="dark"] .ai-tag-orange { background: #7c2d12; color: #fb923c; }
+  .ai-body { flex: 1; font-size: 0.87rem; line-height: 1.6; display: flex; flex-wrap: wrap; gap: 5px; align-items: flex-start; }
+  .ai-chip { padding: 2px 10px; border-radius: 20px; background: var(--surface); border: 1.5px solid var(--border); font-size: 0.8rem; color: var(--text); }
+  .ai-ex-zh { font-weight: 600; color: var(--text); width: 100%; }
+  .ai-ex-en { color: var(--text2); font-size: 0.82rem; font-style: italic; width: 100%; }
+  .ai-plain { color: var(--text2); font-size: 0.84rem; white-space: pre-wrap; }
+  /* AI word header */
+  .ai-word-header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1.5px solid var(--border); }
+  .ai-word-hw { font-size: 1.35rem; font-weight: 800; color: var(--text); }
+  .ai-word-pin { font-size: 0.82rem; color: var(--accent); font-weight: 500; }
+  .ai-word-lvl { font-size: 0.65rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); padding: 2px 7px; border-radius: 20px; color: var(--text2); margin-left: auto; }
+  .ai-word-def { width: 100%; font-size: 0.8rem; color: var(--text2); line-height: 1.5; margin-top: 2px; }
+
+  /* ── SRS BADGE ── */
+  .srs-badge { font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+  .srs-new { background: #dbeafe; color: #1d4ed8; }
+  .srs-due { background: #fef3c7; color: #92400e; }
+  .srs-ok  { background: #dcfce7; color: #15803d; }
+  [data-theme="dark"] .srs-new { background: #1d4ed822; color: #93c5fd; }
+  [data-theme="dark"] .srs-due { background: #92400e22; color: #fcd34d; }
+  [data-theme="dark"] .srs-ok  { background: #15803d22; color: #4ade80; }
+
+  /* ── LISTENING MODE ── */
+  #listen { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .listen-card { background: linear-gradient(135deg, #0ea5e9, #6366f1); border-radius: 20px; padding: 40px 28px; text-align: center; color: #fff; margin-bottom: 20px; box-shadow: var(--shadow); min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .listen-icon { font-size: 3rem; }
+  .btn-play-big { background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.6); border-radius: 50%; width: 72px; height: 72px; font-size: 2rem; cursor: pointer; transition: background 0.18s; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .btn-play-big:hover { background: rgba(255,255,255,0.4); }
+  .btn-play-big.playing { background: rgba(255,255,255,0.5); }
+  .listen-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .listen-opt { padding: 14px 12px; border-radius: 14px; border: 2px solid var(--border); background: var(--surface); cursor: pointer; transition: all 0.18s; font-size: 1.2rem; font-weight: 700; text-align: center; }
+  .listen-opt:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+  .listen-opt.correct { border-color: var(--green); background: #dcfce7; color: var(--green); }
+  .listen-opt.wrong { border-color: var(--red); background: #fee2e2; color: var(--red); }
+  .listen-opt:disabled { cursor: default; opacity: 0.8; }
+  [data-theme="dark"] .listen-opt.correct { background: #16a34a22; }
+  [data-theme="dark"] .listen-opt.wrong { background: #dc262622; }
+
+  /* ── TYPING PRACTICE ── */
+  #typing { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .typing-card { background: linear-gradient(135deg, #f59e0b, #ef4444); border-radius: 20px; padding: 40px 28px; text-align: center; color: #fff; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .typing-def { font-size: 1rem; line-height: 1.6; margin-bottom: 8px; opacity: 0.9; }
+  .typing-word-display { font-size: 3.2rem; font-weight: 800; letter-spacing: 4px; margin-bottom: 8px; min-height: 4rem; }
+  .typing-pinyin { font-size: 1rem; opacity: 0.8; min-height: 1.4rem; }
+  .typing-input-wrap { display: flex; gap: 8px; margin-bottom: 16px; }
+  .typing-input { flex: 1; padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface); color: var(--text); font-size: 1rem; outline: none; transition: border-color 0.2s; }
+  .typing-input:focus { border-color: var(--accent); }
+  .typing-input.correct { border-color: var(--green); background: #dcfce7; }
+  .typing-input.wrong { border-color: var(--red); background: #fee2e2; }
+  [data-theme="dark"] .typing-input.correct { background: #15803d22; }
+  [data-theme="dark"] .typing-input.wrong { background: #dc262622; }
+  .typing-feedback { font-size: 0.9rem; color: var(--text2); min-height: 1.4rem; text-align: center; margin-bottom: 16px; }
+  .typing-feedback.ok { color: var(--green); font-weight: 700; }
+  .typing-feedback.err { color: var(--red); }
+  .typing-hint { margin-top: 8px; font-size: 0.8rem; color: var(--text2); cursor: pointer; text-decoration: underline; text-align: center; }
+
+  /* ── STATS VIEW ── */
+  #stats-view { max-width: 680px; margin: 0 auto; padding: 24px 20px; }
+  .stats-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .stats-header h2 { flex: 1; font-size: 1.2rem; font-weight: 800; }
+  .stat-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border-radius: var(--radius); padding: 18px; text-align: center; box-shadow: var(--shadow); }
+  .stat-card .sc-val { font-size: 2rem; font-weight: 800; }
+  .stat-card .sc-lbl { font-size: 0.78rem; color: var(--text2); margin-top: 4px; }
+  .stat-card.k .sc-val { color: var(--green); }
+  .stat-card.u .sc-val { color: var(--red); }
+  .stat-card.s .sc-val { color: var(--yellow); }
+  .chart-wrap { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .chart-wrap h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); margin-bottom: 16px; }
+  canvas#stats-chart { width: 100% !important; max-height: 200px; }
+  .level-bars { display: flex; flex-direction: column; gap: 8px; }
+  .level-bar-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+  .level-bar-label { width: 70px; color: var(--text2); flex-shrink: 0; }
+  .level-bar-track { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+  .level-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 5px; transition: width 0.6s; }
+  .level-bar-count { width: 36px; text-align: right; color: var(--text2); flex-shrink: 0; }
+
+  /* ── STROKE ORDER PANEL (below card) ── */
+  .stroke-panel { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; text-align: center; box-shadow: var(--shadow); }
+  .stroke-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .stroke-panel-header h4 { font-size: 0.85rem; color: var(--text2); }
+  .stroke-close { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 3px 9px; cursor: pointer; color: var(--text2); font-size: 0.9rem; }
+  .stroke-close:hover { border-color: var(--red); color: var(--red); }
+  #hanzi-target { min-height: 130px; display: flex; justify-content: center; }
+  .btn-stroke-btn { display: block; margin: 0 auto 14px; }
 </style>
 </head>
 <body>
-  <div id="container">
-    <span id="text1"></span>
-    <span id="text2"></span>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" data-i18n="loading">載入詞彙資料中...</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span data-i18n="nav_brand">華語詞彙</span> <span style="color:var(--text2);font-size:0.8rem;font-weight:400">TOCFL 14,425</span>
+  </div>
+  <div class="nav-right">
+    <span class="streak-pill" id="nav-streak" style="display:none">🔥 <span id="nav-streak-count">0</span></span>
+    <button class="btn-lang" id="btn-lang">EN</button>
+    <button class="btn-icon" id="btn-theme" data-i18n-title="nav_theme_title" title="切換深色/淺色模式">🌙</button>
+    <button class="btn-icon" id="btn-settings" data-i18n-title="nav_settings_title" title="設定">⚙️</button>
+  </div>
+</nav>
+
+<!-- HOME VIEW -->
+<div id="home" class="view active">
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="flashcard"><span class="tab-icon">🃏</span><span data-i18n="mode_fc_label">翻卡</span></button>
+    <button class="mode-tab" data-mode="quiz"><span class="tab-icon">✏️</span><span data-i18n="mode_quiz_label">測驗</span></button>
+    <button class="mode-tab" data-mode="listen"><span class="tab-icon">👂</span><span data-i18n="mode_listen_label">聽音</span></button>
+    <button class="mode-tab" data-mode="typing"><span class="tab-icon">⌨️</span><span data-i18n="mode_type_label">輸入</span></button>
   </div>
 
-  <svg id="filters" width="0" height="0" style="position:absolute">
-    <defs>
-      <filter id="threshold">
-        <feColorMatrix in="SourceGraphic" type="matrix"
-          values="1 0 0 0 0
-                  0 1 0 0 0
-                  0 0 1 0 0
-                  0 0 0 255 -140"/>
-      </filter>
-    </defs>
-  </svg>
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" type="text" data-i18n-ph="search_ph" placeholder="搜尋中文、拼音、釋義...">
+    <button class="search-clear" id="search-clear">✕</button>
+  </div>
+  <div id="search-results" class="search-results"></div>
 
-  <script>
-    const elts = {
-      text1: document.getElementById("text1"),
-      text2: document.getElementById("text2")
-    };
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="prog-stats">
+      <div class="prog-stat known"><div class="val" id="prog-known">0</div><div class="lbl" data-i18n="prog_known">已認識</div></div>
+      <div class="prog-stat unknown"><div class="val" id="prog-unknown">0</div><div class="lbl" data-i18n="prog_unknown">需複習</div></div>
+      <div class="prog-stat starred"><div class="val" id="prog-starred">0</div><div class="lbl" data-i18n="prog_starred">已星標</div></div>
+    </div>
+    <div class="prog-bar"><div class="prog-bar-fill" id="prog-bar-fill" style="width:0%"></div></div>
+    <div id="streak-row" style="display:none;margin-top:8px;font-size:0.85rem;color:var(--text2)">🔥 <span id="prog-streak">0</span> <span data-i18n="streak_days">天連續學習</span></div>
+  </div>
 
-    const texts = ["Magnus", "Nilah", "Address"];
-    const morphTime = 1;
-    const cooldownTime = 0.25;
+  <!-- Filter accordion -->
+  <details class="filter-accordion" id="filter-details">
+    <summary>🔽 <span data-i18n="filter_title">篩選 &amp; 選項</span></summary>
+    <div class="filter-body">
+      <div class="filter-label" data-i18n="cat_title">等別</div>
+      <div class="chip-group" id="cat-chips">
+        <div class="chip all active" data-val="all" data-i18n="cat_all">全部</div>
+        <div class="chip" data-val="基礎" data-i18n="cat_basic">基礎</div>
+        <div class="chip" data-val="進階" data-i18n="cat_adv">進階</div>
+        <div class="chip" data-val="精熟" data-i18n="cat_prof">精熟</div>
+      </div>
+      <div class="filter-label" data-i18n="level_title">級別</div>
+      <div class="chip-group" id="level-chips">
+        <div class="chip all active" data-val="all" data-i18n="level_all">全部</div>
+        <div class="chip" data-val="第1*級">第1*級</div>
+        <div class="chip" data-val="第1級">第1級</div>
+        <div class="chip" data-val="第2*級">第2*級</div>
+        <div class="chip" data-val="第2級">第2級</div>
+        <div class="chip" data-val="第3*級">第3*級</div>
+        <div class="chip" data-val="第3級">第3級</div>
+        <div class="chip" data-val="第4*級">第4*級</div>
+        <div class="chip" data-val="第4級">第4級</div>
+        <div class="chip" data-val="第5級">第5級</div>
+        <div class="chip" data-val="第6級">第6級</div>
+        <div class="chip" data-val="第7級">第7級</div>
+      </div>
 
-    let textIndex = texts.length - 1;
-    let time = new Date();
-    let morph = 0;
-    let cooldown = cooldownTime;
+      <!-- Quiz direction (shown only for quiz mode) -->
+      <div class="quiz-sub" id="quiz-sub" style="display:none">
+        <div class="filter-label" data-i18n="quiz_dir_title">測驗方向</div>
+        <div class="radio-group">
+          <label class="radio-opt">
+            <input type="radio" name="quiz-dir" value="zh2def" checked>
+            <span data-i18n="quiz_dir_zh2def">中文 → 解釋</span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="quiz-dir" value="def2zh">
+            <span data-i18n="quiz_dir_def2zh">解釋 → 中文</span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="quiz-dir" value="mixed">
+            <span data-i18n="quiz_dir_mixed">混合</span>
+          </label>
+        </div>
+      </div>
 
-    elts.text1.textContent = texts[textIndex % texts.length];
-    elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+      <div class="filter-label" data-i18n="opt_label">選項</div>
+      <div class="opts-row">
+        <label class="opt-toggle">
+          <input type="checkbox" id="opt-shuffle" checked> <span data-i18n="opt_shuffle">隨機</span>
+        </label>
+        <label class="opt-toggle" id="opt-srs-wrap">
+          <input type="checkbox" id="opt-srs"> <span data-i18n="opt_srs">SRS</span>
+        </label>
+        <label class="opt-toggle">
+          <input type="checkbox" id="opt-unknown-only"> <span data-i18n="opt_unknown_only">未認識</span>
+        </label>
+        <label class="opt-toggle">
+          <input type="checkbox" id="opt-starred-only"> <span data-i18n="opt_starred_only">星標</span>
+        </label>
+      </div>
 
-    function doMorph() {
-      morph -= cooldown;
-      cooldown = 0;
-      let fraction = morph / morphTime;
-      if (fraction > 1) {
-        cooldown = cooldownTime;
-        fraction = 1;
-      }
-      setMorph(fraction);
+      <div class="session-row">
+        <span data-i18n="session_label">每次最多</span>
+        <input type="number" id="session-size" min="0" max="2000" value="0" step="10">
+        <span data-i18n="session_unit">張</span>
+        <span style="color:var(--text2);font-size:0.78rem" data-i18n="session_hint">（0 = 全部）</span>
+      </div>
+    </div>
+  </details>
+
+  <!-- Deck count + Start -->
+  <div class="deck-start-row">
+    <div class="deck-info-compact">
+      <span class="deck-count-val" id="deck-count">—</span>
+      <span class="deck-words-lbl" id="deck-sub" data-i18n="deck_words">個詞語</span>
+    </div>
+    <button class="btn-start" id="btn-start" data-i18n="btn_start">開始練習</button>
+  </div>
+
+  <!-- Quick links -->
+  <div class="quick-links">
+    <button class="btn-ql" id="btn-review-unknown">📖 <span data-i18n="btn_review_unknown">複習答錯的詞</span></button>
+    <button class="btn-ql" id="btn-review-starred">⭐ <span data-i18n="btn_review_starred">複習星標詞</span></button>
+    <button class="btn-ql" id="btn-stats-nav">📊 <span data-i18n="btn_stats">統計</span></button>
+    <button class="btn-ql danger" id="btn-reset">🔄 <span data-i18n="btn_reset">重置進度</span></button>
+  </div>
+</div>
+<!-- FLASHCARD VIEW -->
+<div id="flashcard" class="view">
+  <div class="fc-header">
+    <button class="btn-back" id="fc-back" data-i18n="btn_back">← 返回</button>
+    <div class="fc-progress-text" id="fc-progress-text">1 / 100</div>
+    <div style="width:80px"></div>
+  </div>
+  <div class="fc-progress-bar">
+    <div class="fc-progress-bar-fill" id="fc-progress-bar" style="width:0%"></div>
+  </div>
+
+  <!-- Card -->
+  <div class="card-container" id="card-container">
+    <div class="card-inner" id="card-inner">
+      <div class="card-face card-front">
+        <button class="card-star" id="card-star-front">☆</button>
+        <div class="card-level-badge" id="card-level-front"></div>
+        <div class="card-word" id="card-word"></div>
+        <div class="card-hint" data-i18n="card_hint">點擊翻面</div>
+        <button class="btn-tts" id="fc-tts">🔊 <span data-i18n="tts_btn">聽發音</span></button>
+      </div>
+      <div class="card-face card-back">
+        <button class="card-star" id="card-star-back">☆</button>
+        <div class="card-level-badge" id="card-level-back"></div>
+        <div class="card-zhuyin" id="card-zhuyin"></div>
+        <div class="card-pinyin" id="card-pinyin"></div>
+        <div class="card-def" id="card-def"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stroke Order Panel (outside card, below card-container) -->
+  <div class="stroke-panel" id="stroke-panel" style="display:none">
+    <div class="stroke-panel-header">
+      <h4>✍ <span data-i18n="btn_stroke">筆順動畫</span></h4>
+      <button class="stroke-close" id="stroke-close">✕</button>
+    </div>
+    <div id="hanzi-target"></div>
+  </div>
+  <button class="btn-sm btn-stroke-btn" id="btn-stroke" style="display:none">✍ <span data-i18n="btn_stroke">筆順動畫</span></button>
+
+  <div class="fc-hint" id="fc-hint" data-i18n="fc_hint">點擊卡片翻面 · Space 翻面</div>
+
+  <!-- Actions (before flip) -->
+  <div id="fc-pre-actions" style="display:flex;gap:12px;justify-content:center">
+    <button class="btn-action btn-skip" id="fc-skip">
+      <span data-i18n="fc_skip">⏭ 跳過</span><div class="sub">S</div>
+    </button>
+  </div>
+
+  <!-- Actions (after flip) -->
+  <div id="fc-post-actions" class="fc-actions three" style="display:none">
+    <button class="btn-action btn-unknown" id="fc-unknown">
+      <span data-i18n="fc_unknown">✗ 不認識</span><div class="sub">←</div>
+    </button>
+    <button class="btn-action btn-skip" id="fc-skip2">
+      <span data-i18n="fc_skip">⏭ 跳過</span><div class="sub">↓</div>
+    </button>
+    <button class="btn-action btn-know" id="fc-know">
+      <span data-i18n="fc_know">✓ 認識</span><div class="sub">→</div>
+    </button>
+  </div>
+
+  <div class="key-hints">
+    <span class="key-hint"><span class="key">Space</span> <span data-i18n="key_flip">翻面</span></span>
+    <span class="key-hint"><span class="key">→</span> <span data-i18n="key_know">認識</span></span>
+    <span class="key-hint"><span class="key">←</span> <span data-i18n="key_unknown">不認識</span></span>
+    <span class="key-hint"><span class="key">↓</span> <span data-i18n="key_skip">跳過</span></span>
+    <span class="key-hint"><span class="key">S</span> <span data-i18n="key_star">星標</span></span>
+  </div>
+
+  <div class="fc-ai-wrap" id="fc-ai-wrap" style="display:none">
+    <button class="btn-sm" id="btn-ai" style="width:100%;padding:10px;text-align:center"><span data-i18n="ai_btn">🤖 詞彙分析</span></button>
+    <div class="ai-ex" id="ai-ex"></div>
+  </div>
+
+  <!-- End screen -->
+  <div class="fc-end" id="fc-end" style="display:none">
+    <div class="big">🎉</div>
+    <h2 data-i18n="fc_end_title">本輪練習結束！</h2>
+    <p id="fc-end-sub">你完成了所有卡片</p>
+    <div class="fc-end-stats">
+      <div class="fc-end-stat k"><div class="val" id="fce-know">0</div><div class="lbl" data-i18n="fce_known_lbl">認識</div></div>
+      <div class="fc-end-stat u"><div class="val" id="fce-unknown">0</div><div class="lbl" data-i18n="fce_unknown_lbl">不認識</div></div>
+      <div class="fc-end-stat s"><div class="val" id="fce-star">0</div><div class="lbl" data-i18n="fce_star_lbl">星標</div></div>
+    </div>
+    <div class="fc-end-btns">
+      <button class="btn-primary" id="fce-repeat-unknown" data-i18n="fce_repeat">再練不認識的</button>
+      <button class="btn-secondary" id="fce-home" data-i18n="btn_home">返回主頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ VIEW -->
+<div id="quiz" class="view">
+  <div class="quiz-header">
+    <button class="btn-back" id="quiz-back" data-i18n="btn_back">← 返回</button>
+    <div class="quiz-progress-text" id="quiz-progress-text">1 / 100</div>
+    <div class="quiz-score-badge">
+      <span class="qs" id="quiz-score-correct">0</span>/
+      <span class="qe" id="quiz-score-wrong">0</span>
+    </div>
+  </div>
+  <div class="quiz-progress-bar">
+    <div class="quiz-progress-bar-fill" id="quiz-progress-bar" style="width:0%"></div>
+  </div>
+
+  <div class="quiz-question">
+    <div class="quiz-prompt" id="quiz-prompt">請選擇正確的解釋：</div>
+    <div id="quiz-q-word" class="quiz-word" style="display:none"></div>
+    <div id="quiz-q-pinyin" class="quiz-pinyin" style="display:none"></div>
+    <div id="quiz-q-def" class="quiz-def-prompt" style="display:none"></div>
+  </div>
+
+  <div class="quiz-options" id="quiz-options"></div>
+
+  <div class="quiz-feedback" id="quiz-feedback">
+    <div class="feedback-icon" id="fb-icon"></div>
+    <div class="feedback-text">
+      <strong id="fb-title"></strong>
+      <span id="fb-detail"></span>
+    </div>
+    <button class="btn-next" id="btn-next-q" data-i18n="btn_next_q">下一題 →</button>
+  </div>
+
+  <!-- Quiz End -->
+  <div class="fc-end" id="quiz-end" style="display:none">
+    <div class="big">🏆</div>
+    <h2 data-i18n="quiz_end_title">測驗完成！</h2>
+    <p id="quiz-end-sub"></p>
+    <div class="fc-end-stats">
+      <div class="fc-end-stat k"><div class="val" id="qe-correct">0</div><div class="lbl" data-i18n="qe_correct_lbl">答對</div></div>
+      <div class="fc-end-stat u"><div class="val" id="qe-wrong">0</div><div class="lbl" data-i18n="qe_wrong_lbl">答錯</div></div>
+      <div class="fc-end-stat s"><div class="val" id="qe-pct">0%</div><div class="lbl" data-i18n="qe_pct_lbl">正確率</div></div>
+    </div>
+    <div class="fc-end-btns">
+      <button class="btn-primary" id="qe-retry" data-i18n="qe_retry">再來一次</button>
+      <button class="btn-secondary" id="qe-home" data-i18n="btn_home">返回主頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTENING VIEW -->
+<div id="listen" class="view">
+  <div class="fc-header">
+    <button class="btn-back" id="listen-back" data-i18n="btn_back">← 返回</button>
+    <div class="fc-progress-text" id="listen-progress-text">1 / —</div>
+    <div style="width:80px"></div>
+  </div>
+  <div class="fc-progress-bar"><div class="fc-progress-bar-fill" id="listen-progress-bar" style="width:0%"></div></div>
+  <div class="listen-card" id="listen-card">
+    <div class="listen-icon">👂</div>
+    <button class="btn-play-big" id="btn-play-audio">🔊</button>
+    <div style="font-size:0.85rem;opacity:0.8" data-i18n="listen_prompt">聽發音後，選出正確漢字</div>
+  </div>
+  <div class="listen-opts" id="listen-opts"></div>
+  <div class="quiz-feedback" id="listen-feedback">
+    <div class="feedback-icon" id="lfb-icon"></div>
+    <div class="feedback-text"><strong id="lfb-title"></strong><span id="lfb-detail"></span></div>
+    <button class="btn-next" id="btn-listen-next" data-i18n="btn_next_q">下一題 →</button>
+  </div>
+  <div class="fc-end" id="listen-end" style="display:none">
+    <div class="big">👂</div>
+    <h2 data-i18n="listen_end_title">聽力練習結束！</h2>
+    <p id="listen-end-sub"></p>
+    <div class="fc-end-btns">
+      <button class="btn-primary" id="le-retry" data-i18n="qe_retry">再來一次</button>
+      <button class="btn-secondary" id="le-home" data-i18n="btn_home">返回主頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- TYPING VIEW -->
+<div id="typing" class="view">
+  <div class="fc-header">
+    <button class="btn-back" id="typing-back" data-i18n="btn_back">← 返回</button>
+    <div class="fc-progress-text" id="typing-progress-text">1 / —</div>
+    <div style="width:80px"></div>
+  </div>
+  <div class="fc-progress-bar"><div class="fc-progress-bar-fill" id="typing-progress-bar" style="width:0%"></div></div>
+  <div class="typing-card">
+    <div class="typing-def" id="typing-def"></div>
+    <div class="typing-word-display" id="typing-word-display">?</div>
+    <div class="typing-pinyin" id="typing-pinyin-display"></div>
+  </div>
+  <div class="typing-input-wrap">
+    <input class="typing-input" id="typing-input" type="text" data-i18n-ph="typing_ph" placeholder="輸入漢字..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="btn-next" id="btn-typing-check" data-i18n="btn_check">確認</button>
+  </div>
+  <div class="typing-feedback" id="typing-feedback"></div>
+  <div class="typing-hint" id="typing-hint" data-i18n="typing_hint">顯示答案</div>
+  <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
+    <button class="btn-next" id="btn-typing-next" data-i18n="btn_next_q" style="display:none">下一題 →</button>
+  </div>
+  <div class="fc-end" id="typing-end" style="display:none">
+    <div class="big">⌨️</div>
+    <h2 data-i18n="typing_end_title">輸入練習結束！</h2>
+    <p id="typing-end-sub"></p>
+    <div class="fc-end-btns">
+      <button class="btn-primary" id="te-retry" data-i18n="qe_retry">再來一次</button>
+      <button class="btn-secondary" id="te-home" data-i18n="btn_home">返回主頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS VIEW -->
+<div id="stats-view" class="view">
+  <div class="stats-header">
+    <button class="btn-back" id="stats-back" data-i18n="btn_back">← 返回</button>
+    <h2 data-i18n="stats_title">學習統計</h2>
+    <div style="width:80px"></div>
+  </div>
+  <div class="stat-cards">
+    <div class="stat-card k"><div class="sc-val" id="sc-known">0</div><div class="sc-lbl" data-i18n="prog_known">已認識</div></div>
+    <div class="stat-card u"><div class="sc-val" id="sc-unknown">0</div><div class="sc-lbl" data-i18n="prog_unknown">需複習</div></div>
+    <div class="stat-card s"><div class="sc-val" id="sc-pct">0%</div><div class="sc-lbl" data-i18n="stats_pct">完成率</div></div>
+  </div>
+  <div class="chart-wrap">
+    <h3 data-i18n="stats_daily">每日學習（近14天）</h3>
+    <canvas id="stats-chart"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <h3 data-i18n="stats_by_level">各級別進度</h3>
+    <div class="level-bars" id="level-bars"></div>
+  </div>
+</div>
+
+<!-- REVIEW VIEW -->
+<div id="review" class="view">
+  <div class="review-header">
+    <button class="btn-back" id="review-back" data-i18n="btn_back">← 返回</button>
+    <h2 id="review-title">已星標詞語</h2>
+    <div style="width:80px"></div>
+  </div>
+  <div class="word-list" id="review-list"></div>
+  <div class="empty-state" id="review-empty" style="display:none">
+    <div class="icon">🌟</div>
+    <p data-i18n="review_empty">這裡還沒有詞語</p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span data-i18n="settings_title">設定</span>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-sec">
+      <h4 data-i18n="settings_backup">進度備份</h4>
+      <div class="modal-row">
+        <button class="btn-m pri" id="btn-export" data-i18n="btn_export">⬇ 匯出進度</button>
+        <button class="btn-m sec" id="btn-import-trigger" data-i18n="btn_import">⬆ 匯入進度</button>
+        <input type="file" id="file-import" accept=".json" style="display:none">
+      </div>
+    </div>
+    <div class="modal-sec">
+      <h4 data-i18n="ai_section">🤖 Groq AI 例句</h4>
+      <p style="font-size:0.8rem;color:var(--text2);margin-bottom:8px;line-height:1.5" data-i18n="ai_hint">輸入 API Key，翻卡可生成中文例句。不需 project，不需信用卡。</p>
+      <p style="font-size:0.8rem;color:var(--text2);margin-bottom:10px"><a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--accent)" data-i18n="ai_free_link">免費取得 Groq Key（console.groq.com）</a></p>
+      <div class="modal-row">
+        <input class="modal-inp" type="password" id="groq-input" data-i18n-ph="ai_key_ph" placeholder="gsk_...">
+        <button class="btn-m pri" id="btn-groq-save" data-i18n="btn_save">儲存</button>
+      </div>
+    </div>
+    <div class="modal-sec">
+      <h4 data-i18n="settings_tts">語音設定</h4>
+      <label class="opt-toggle" style="margin:0">
+        <input type="checkbox" id="opt-tts-auto"> <span data-i18n="tts_auto">翻卡後自動朗讀</span>
+      </label>
+    </div>
+  </div>
+</div>
+<!-- PWA: works when served via HTTPS/localhost (not file://) -->
+<div id="toast"></div>
+
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+// I18N
+// ══════════════════════════════════════════════════
+const TRANSLATIONS = {
+  zh: {
+    nav_brand:'華語詞彙', nav_words:'TOCFL 14,425 詞',
+    nav_review_title:'查看已星標 / 答錯的詞', nav_theme_title:'切換深色/淺色模式',
+    loading:'載入詞彙資料中...', loading_fail:'資料載入失敗，請確認 data.js 存在',
+    home_title:'TOCFL 華語詞彙練習', home_sub:'選擇等級、模式，開始學習 🇹🇼',
+    prog_title:'學習進度', prog_known:'已認識', prog_unknown:'需複習', prog_starred:'已星標',
+    btn_review_unknown:'複習答錯的詞', btn_review_starred:'複習星標詞', btn_reset:'重置進度',
+    cat_title:'等別', level_title:'級別',
+    cat_all:'全部', cat_basic:'基礎 (1-4級)', cat_adv:'進階 (5-6級)', cat_prof:'精熟 (7級)', level_all:'全部',
+    mode_fc_label:'翻卡練習', mode_fc_desc:'看中文、猜意思，標記認識與否',
+    mode_quiz_label:'測驗模式', mode_quiz_desc:'四選一，測試你的詞彙量',
+    quiz_dir_title:'測驗方向', quiz_dir_zh2def:'中文 → 解釋', quiz_dir_def2zh:'解釋 → 中文', quiz_dir_mixed:'混合',
+    opt_shuffle:'隨機排序', opt_unknown_only:'只看未認識', opt_starred_only:'只看星標詞',
+    deck_label:'本次練習', deck_words:'個詞語', btn_start:'開始練習',
+    btn_back:'← 返回', btn_home:'返回主頁',
+    card_hint:'點擊翻面', fc_hint:'點擊卡片翻面 · Space 翻面',
+    fc_skip:'⏭ 跳過', fc_unknown:'✗ 不認識', fc_know:'✓ 認識',
+    key_flip:'翻面', key_know:'認識', key_unknown:'不認識', key_skip:'跳過', key_star:'星標',
+    fc_end_title:'本輪練習結束！', fc_end_sub:'{0} 張卡片全部完成',
+    fce_known_lbl:'認識', fce_unknown_lbl:'不認識', fce_star_lbl:'星標', fce_repeat:'再練不認識的',
+    quiz_prompt_zh2def:'請選擇正確的解釋：', quiz_prompt_def2zh:'請選擇對應的中文詞語：',
+    btn_next_q:'下一題 →', fb_correct:'答對了！', fb_wrong:'正確答案：',
+    quiz_end_title:'測驗完成！', quiz_end_sub:'共 {0} 題，答對 {1} 題 ({2}%)',
+    qe_correct_lbl:'答對', qe_wrong_lbl:'答錯', qe_pct_lbl:'正確率', qe_retry:'再來一次',
+    review_starred_title:'已星標詞語 ({0})', review_unknown_title:'需複習詞語 ({0})',
+    review_empty:'這裡還沒有詞語',
+    wi_unstar:'取消星標', wi_star:'加星標', wi_mark_known:'標為認識',
+    wi_badge_star:'★ 星標', wi_badge_unknown:'需複習',
+    toast_starred:'⭐ 已加入星標', toast_unstarred:'☆ 已取消星標',
+    toast_no_words:'沒有符合條件的詞語', toast_no_review:'沒有需要複習的詞', toast_reset_done:'進度已重置',
+    confirm_reset:'確認重置所有學習進度？此操作無法復原。', no_def:'（無解釋）',
+    search_ph:'搜尋中文、拼音、釋義...',
+    session_label:'每次最多', session_unit:'張', session_hint:'（0 = 全部）',
+    streak_days:'天連續學習',
+    tts_btn:'聽發音', tts_auto:'翻卡後自動朗讀',
+    nav_settings_title:'設定', settings_title:'設定', settings_backup:'進度備份',
+    btn_export:'⬇ 匯出進度', btn_import:'⬆ 匯入進度', btn_save:'儲存',
+    settings_tts:'語音設定',
+    ai_section:'🤖 Groq AI 詞彙分析', ai_hint:'輸入 Groq API Key，翻卡可獲得詞彙分析（用法、搭配、例句、注意）。不需 project，不需信用卡。',
+    ai_free_link:'免費取得 Groq Key（console.groq.com）', ai_key_ph:'gsk_...', ai_btn:'🤖 詞彙分析',
+    toast_exported:'✅ 進度已匯出', toast_imported:'✅ 進度已匯入',
+    toast_import_err:'❌ 無效的備份檔案',
+    toast_key_saved:'✅ API Key 已儲存', toast_key_clear:'已清除 API Key',
+    mode_listen_label:'聽音選字', mode_listen_desc:'聽發音，選出正確漢字',
+    mode_type_label:'拼音輸入', mode_type_desc:'看解釋，輸入正確漢字',
+    opt_srs:'智慧複習 (SRS)', btn_stroke:'✍ 筆順動畫',
+    btn_check:'確認', typing_ph:'輸入漢字...', typing_hint:'顯示答案',
+    listen_prompt:'聽發音後，選出正確漢字',
+    listen_end_title:'聽力練習結束！', typing_end_title:'輸入練習結束！',
+    stats_title:'學習統計', stats_pct:'完成率', stats_daily:'每日學習（近14天）',
+    stats_by_level:'各級別進度', btn_stats:'統計',
+    pwa_title:'安裝應用程式', pwa_desc:'加入主畫面，隨時離線使用',
+    pwa_dismiss:'稍後', pwa_install:'安裝',
+    filter_title:'篩選 & 選項',
+    opt_label:'選項',
+    search_count:'{0} 筆結果', search_cap:'（顯示前30筆）',
+    search_no_results:'找不到符合的詞語', search_tap:'點擊詞語，以單字模式練習',
+    srs_due:'今日需複習', srs_new:'新詞', srs_ok:'已掌握',
+    listen_end_sub:'{0}題，答對{1}題({2}%)', typing_end_sub:'{0}題，答對{1}題({2}%)',
+    nav_stats_title:'統計',
+  },
+  en: {
+    nav_brand:'TOCFL Vocab', nav_words:'14,425 words',
+    nav_review_title:'View starred / missed words', nav_theme_title:'Toggle dark/light mode',
+    loading:'Loading vocabulary data...', loading_fail:'Failed to load data.js — make sure the file exists.',
+    home_title:'TOCFL Chinese Vocabulary', home_sub:'Select level & mode, start studying 🇹🇼',
+    prog_title:'Progress', prog_known:'Known', prog_unknown:'Review', prog_starred:'Starred',
+    btn_review_unknown:'Review missed words', btn_review_starred:'Review starred words', btn_reset:'Reset progress',
+    cat_title:'Category', level_title:'Level',
+    cat_all:'All', cat_basic:'Basic (Levels 1–4)', cat_adv:'Advanced (Levels 5–6)', cat_prof:'Proficient (Level 7)', level_all:'All',
+    mode_fc_label:'Flashcards', mode_fc_desc:'See Chinese, guess meaning, mark known/unknown',
+    mode_quiz_label:'Quiz', mode_quiz_desc:'4-choice quiz to test your vocabulary',
+    quiz_dir_title:'Quiz Direction', quiz_dir_zh2def:'Chinese → Definition', quiz_dir_def2zh:'Definition → Chinese', quiz_dir_mixed:'Mixed',
+    opt_shuffle:'Shuffle', opt_unknown_only:'Unknown only', opt_starred_only:'Starred only',
+    deck_label:'This session', deck_words:'words', btn_start:'Start',
+    btn_back:'← Back', btn_home:'Back to home',
+    card_hint:'Click to flip', fc_hint:'Click card to flip · Space to flip',
+    fc_skip:'⏭ Skip', fc_unknown:"✗ Don't know", fc_know:'✓ Know it',
+    key_flip:'Flip', key_know:'Know', key_unknown:"Don't know", key_skip:'Skip', key_star:'Star',
+    fc_end_title:'Round Complete!', fc_end_sub:'All {0} cards finished',
+    fce_known_lbl:'Known', fce_unknown_lbl:'Unknown', fce_star_lbl:'Starred', fce_repeat:'Retry unknown',
+    quiz_prompt_zh2def:'Choose the correct definition:', quiz_prompt_def2zh:'Choose the matching Chinese word:',
+    btn_next_q:'Next →', fb_correct:'Correct!', fb_wrong:'Correct answer: ',
+    quiz_end_title:'Quiz Complete!', quiz_end_sub:'{1} out of {0} correct ({2}% accuracy)',
+    qe_correct_lbl:'Correct', qe_wrong_lbl:'Wrong', qe_pct_lbl:'Accuracy', qe_retry:'Try again',
+    review_starred_title:'Starred Words ({0})', review_unknown_title:'Words to Review ({0})',
+    review_empty:'No words here yet',
+    wi_unstar:'Unstar', wi_star:'Star', wi_mark_known:'Mark as known',
+    wi_badge_star:'★ Starred', wi_badge_unknown:'Review',
+    toast_starred:'⭐ Added to starred', toast_unstarred:'☆ Removed from starred',
+    toast_no_words:'No words match the current filters', toast_no_review:'No words to review', toast_reset_done:'Progress reset',
+    confirm_reset:'Reset all learning progress? This cannot be undone.', no_def:'(no definition)',
+    search_ph:'Search word, pinyin, definition...',
+    session_label:'Max per session', session_unit:'cards', session_hint:'(0 = all)',
+    streak_days:'day streak',
+    tts_btn:'Listen', tts_auto:'Auto-play on flip',
+    nav_settings_title:'Settings', settings_title:'Settings', settings_backup:'Progress Backup',
+    btn_export:'⬇ Export Progress', btn_import:'⬆ Import Progress', btn_save:'Save',
+    settings_tts:'Speech Settings',
+    ai_section:'🤖 Groq AI Word Analysis', ai_hint:'Enter your Groq API Key for structured word analysis (usage, collocations, example, notes). No project or credit card needed.',
+    ai_free_link:'Get free Groq Key (console.groq.com)', ai_key_ph:'gsk_...', ai_btn:'🤖 Analyze Word',
+    toast_exported:'✅ Progress exported', toast_imported:'✅ Progress imported',
+    toast_import_err:'❌ Invalid backup file',
+    toast_key_saved:'✅ API Key saved', toast_key_clear:'API Key cleared',
+    mode_listen_label:'Listening', mode_listen_desc:'Hear audio, choose the correct character',
+    mode_type_label:'Typing', mode_type_desc:'Read definition, type the Chinese word',
+    opt_srs:'Smart Review (SRS)', btn_stroke:'✍ Stroke Order',
+    btn_check:'Check', typing_ph:'Type the character...', typing_hint:'Show answer',
+    listen_prompt:'Listen and choose the correct word',
+    listen_end_title:'Listening Complete!', typing_end_title:'Typing Practice Done!',
+    stats_title:'Statistics', stats_pct:'Completion', stats_daily:'Daily Study (Last 14 days)',
+    stats_by_level:'Progress by Level', btn_stats:'Statistics',
+    pwa_title:'Install App', pwa_desc:'Add to home screen for offline use',
+    pwa_dismiss:'Later', pwa_install:'Install',
+    filter_title:'Filters & Options',
+    opt_label:'Options',
+    search_count:'{0} results', search_cap:'(showing first 30)',
+    search_no_results:'No matching words found', search_tap:'Tap a word to study it in flashcard mode',
+    srs_due:'Due today', srs_new:'New', srs_ok:'Mastered',
+    listen_end_sub:'{1}/{0} correct ({2}%)', typing_end_sub:'{1}/{0} correct ({2}%)',
+    nav_stats_title:'Statistics',
+  }
+};
+
+let currentLang = localStorage.getItem('tocfl_lang') || 'zh';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS.zh)[key] || TRANSLATIONS.zh[key] || key;
+}
+function tf(key, ...args) {
+  let s = t(key);
+  args.forEach((v, i) => { s = s.replace('{' + i + '}', v); });
+  return s;
+}
+function applyLang() {
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-TW' : 'en';
+  document.title = t('home_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = TRANSLATIONS[currentLang][el.dataset.i18n];
+    if (v !== undefined) el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const v = TRANSLATIONS[currentLang][el.dataset.i18nTitle];
+    if (v !== undefined) el.title = v;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const v = TRANSLATIONS[currentLang][el.dataset.i18nPh];
+    if (v !== undefined) el.placeholder = v;
+  });
+  document.getElementById('btn-lang').textContent = currentLang === 'zh' ? 'EN' : '中文';
+  updateDeckInfo();
+}
+document.getElementById('btn-lang').addEventListener('click', () => {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('tocfl_lang', currentLang);
+  applyLang();
+});
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+const STORAGE_KEY = 'tocfl_progress_v2';
+
+let vocab = [];
+let progress = {}; // id -> { known: bool, unknown: bool, starred: bool }
+let currentMode = 'flashcard';
+let filterCat = 'all';
+let filterLevel = 'all';
+let quizDir = 'zh2def';
+let deck = [];       // current session deck
+let deckIdx = 0;
+let cardFlipped = false;
+let sessionKnown = 0, sessionUnknown = 0;
+let quizCorrect = 0, quizWrong = 0;
+let reviewMode = null; // 'starred' | 'unknown'
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function init() {
+  vocab = window.VOCAB_DATA || [];
+  loadProgress();
+  applyLang();
+  checkStreak();
+  renderHomeStats();
+  document.getElementById('loading').style.display = 'none';
+  applyTheme();
+}
+
+if (window.VOCAB_DATA) {
+  init();
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.VOCAB_DATA) init();
+    else {
+      document.querySelector('.loading-text').textContent = t('loading_fail');
     }
+  });
+}
 
-    function setMorph(fraction) {
-      elts.text2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-      elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-      fraction = 1 - fraction;
-      elts.text1.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-      elts.text1.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-      elts.text1.textContent = texts[textIndex % texts.length];
-      elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+// ══════════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════════
+function loadProgress() {
+  try {
+    progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch { progress = {}; }
+}
+
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
+
+function getP(id) { return progress[id] || {}; }
+
+function setKnown(id, val) {
+  if (!progress[id]) progress[id] = {};
+  progress[id].known = val;
+  if (val) progress[id].unknown = false;
+  saveProgress();
+}
+
+function setUnknown(id, val) {
+  if (!progress[id]) progress[id] = {};
+  progress[id].unknown = val;
+  if (val) progress[id].known = false;
+  saveProgress();
+}
+
+function toggleStar(id) {
+  if (!progress[id]) progress[id] = {};
+  progress[id].starred = !progress[id].starred;
+  saveProgress();
+  return progress[id].starred;
+}
+
+function getStats() {
+  let known = 0, unknown = 0, starred = 0;
+  for (const key in progress) {
+    const p = progress[key];
+    if (p.known) known++;
+    if (p.unknown) unknown++;
+    if (p.starred) starred++;
+  }
+  return { known, unknown, starred };
+}
+
+// ══════════════════════════════════════════════════
+// FILTER & DECK
+// ══════════════════════════════════════════════════
+function getFilteredVocab() {
+  let list = vocab;
+  if (filterCat !== 'all') list = list.filter(v => v.c === filterCat);
+  if (filterLevel !== 'all') list = list.filter(v => v.l === filterLevel);
+  const unknownOnly = document.getElementById('opt-unknown-only').checked;
+  const starredOnly = document.getElementById('opt-starred-only').checked;
+  if (unknownOnly) list = list.filter(v => getP(v.id).unknown);
+  if (starredOnly) list = list.filter(v => getP(v.id).starred);
+  const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+  if (q) list = list.filter(v => v.w.includes(q) || (v.p && v.p.toLowerCase().includes(q)) || (v.d && v.d.toLowerCase().includes(q)));
+  return list;
+}
+
+function buildDeck(list) {
+  let d = [...list];
+  if (document.getElementById('opt-shuffle').checked) {
+    shuffleArr(d);
+  }
+  const lim = parseInt(document.getElementById('session-size')?.value) || 0;
+  if (lim > 0 && d.length > lim) d = d.slice(0, lim);
+  return d;
+}
+
+function shuffleArr(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function updateDeckInfo() {
+  const list = getFilteredVocab();
+  const el = document.getElementById('deck-count');
+  const sub = document.getElementById('deck-sub');
+  el.textContent = list.length.toLocaleString();
+  sub.textContent = t('deck_words');
+  document.getElementById('btn-start').disabled = list.length === 0;
+}
+
+function renderHomeStats() {
+  const s = getStats();
+  document.getElementById('prog-known').textContent = s.known;
+  document.getElementById('prog-unknown').textContent = s.unknown;
+  document.getElementById('prog-starred').textContent = s.starred;
+  const pct = vocab.length ? Math.round(s.known / vocab.length * 100) : 0;
+  document.getElementById('prog-bar-fill').style.width = pct + '%';
+}
+
+// ══════════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════════
+function applyTheme() {
+  const dark = localStorage.getItem('tocfl_theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  document.getElementById('btn-theme').textContent = dark ? '☀️' : '🌙';
+}
+
+document.getElementById('btn-theme').addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  localStorage.setItem('tocfl_theme', isDark ? '' : 'dark');
+  applyTheme();
+});
+
+// ══════════════════════════════════════════════════
+// VIEWS
+// ══════════════════════════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+// HOME INTERACTIONS
+// ══════════════════════════════════════════════════
+// Category chips
+document.getElementById('cat-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#cat-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  filterCat = chip.dataset.val;
+  // If picking a specific category, auto-clear level filter
+  if (filterCat !== 'all') {
+    filterLevel = 'all';
+    document.querySelectorAll('#level-chips .chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('#level-chips .chip[data-val="all"]').classList.add('active');
+  }
+  updateDeckInfo();
+});
+
+// Level chips
+document.getElementById('level-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#level-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  filterLevel = chip.dataset.val;
+  // Auto clear category if picking specific level
+  if (filterLevel !== 'all') {
+    filterCat = 'all';
+    document.querySelectorAll('#cat-chips .chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('#cat-chips .chip[data-val="all"]').classList.add('active');
+  }
+  updateDeckInfo();
+});
+
+// Mode tabs
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    currentMode = tab.dataset.mode;
+    const quizSub = document.getElementById('quiz-sub');
+    if (quizSub) quizSub.style.display = currentMode === 'quiz' ? '' : 'none';
+    // SRS option only makes sense for flashcard mode
+    const srsWrap = document.getElementById('opt-srs-wrap');
+    if (srsWrap) srsWrap.style.display = currentMode === 'flashcard' ? '' : 'none';
+    // Open filter accordion when quiz is selected (to show quiz options)
+    if (currentMode === 'quiz') {
+      const fd = document.getElementById('filter-details');
+      if (fd) fd.open = true;
     }
+  });
+});
 
-    function doCooldown() {
-      morph = 0;
-      elts.text2.style.filter = "";
-      elts.text2.style.opacity = "100%";
-      elts.text1.style.filter = "";
-      elts.text1.style.opacity = "0%";
+// Quiz direction
+document.querySelectorAll('input[name="quiz-dir"]').forEach(r => {
+  r.addEventListener('change', () => { quizDir = r.value; });
+});
+
+// Options
+['opt-shuffle', 'opt-unknown-only', 'opt-starred-only'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateDeckInfo);
+});
+
+// Review shortcuts
+document.getElementById('btn-review-unknown').addEventListener('click', () => {
+  reviewMode = 'unknown';
+  showReview();
+});
+document.getElementById('btn-review-starred').addEventListener('click', () => {
+  reviewMode = 'starred';
+  showReview();
+});
+// btn-review moved to quick-links as btn-review-starred
+
+// Reset
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (!confirm(t('confirm_reset'))) return;
+  progress = {};
+  saveProgress();
+  renderHomeStats();
+  toast(t('toast_reset_done'));
+});
+
+// Start
+document.getElementById('btn-start').addEventListener('click', () => {
+  const list = getFilteredVocab();
+  if (!list.length) { toast(t('toast_no_words')); return; }
+  const useSRS = currentMode === 'flashcard' && document.getElementById('opt-srs')?.checked;
+  deck = useSRS ? buildDeckSRS(list) : buildDeck(list);
+  deckIdx = 0;
+  sessionKnown = 0;
+  sessionUnknown = 0;
+  if (currentMode === 'flashcard') startFlashcard();
+  else if (currentMode === 'quiz') startQuiz();
+  else if (currentMode === 'listen') startListen();
+  else if (currentMode === 'typing') startTyping();
+});
+
+// ══════════════════════════════════════════════════
+// FLASHCARD MODE
+// ══════════════════════════════════════════════════
+function startFlashcard() {
+  showView('flashcard');
+  document.getElementById('fc-end').style.display = 'none';
+  document.getElementById('card-container').style.display = '';
+  document.getElementById('fc-pre-actions').style.display = '';
+  document.getElementById('fc-post-actions').style.display = 'none';
+  document.getElementById('fc-hint').style.display = '';
+  document.querySelectorAll('.key-hints').forEach(e => e.style.display = '');
+  cardFlipped = false;
+  showCard(0);
+}
+
+function showCard(idx) {
+  if (idx >= deck.length) { showFcEnd(); return; }
+  deckIdx = idx;
+  cardFlipped = false;
+  document.getElementById('card-inner').classList.remove('flipped');
+  document.getElementById('fc-pre-actions').style.display = 'flex';
+  document.getElementById('fc-post-actions').style.display = 'none';
+
+  const w = deck[idx];
+  document.getElementById('card-word').textContent = w.w;
+  document.getElementById('card-zhuyin').textContent = w.z || '';
+  document.getElementById('card-pinyin').textContent = w.p || '';
+  document.getElementById('card-def').textContent = w.d || t('no_def');
+  document.getElementById('card-level-front').textContent = w.l;
+  document.getElementById('card-level-back').textContent = w.l;
+
+  const starred = getP(w.id).starred;
+  const starF = document.getElementById('card-star-front');
+  const starB = document.getElementById('card-star-back');
+  starF.textContent = starB.textContent = starred ? '★' : '☆';
+  starF.classList.toggle('active', !!starred);
+  starB.classList.toggle('active', !!starred);
+
+  const pct = Math.round(idx / deck.length * 100);
+  document.getElementById('fc-progress-bar').style.width = pct + '%';
+  document.getElementById('fc-progress-text').textContent = `${idx + 1} / ${deck.length}`;
+  // Reset stroke panel when showing new card
+  const strokePanel = document.getElementById('stroke-panel');
+  if (strokePanel) strokePanel.style.display = 'none';
+  const hanziTarget = document.getElementById('hanzi-target');
+  if (hanziTarget) hanziTarget.innerHTML = '';
+  const btnStroke = document.getElementById('btn-stroke');
+  if (btnStroke) btnStroke.style.display = window.HanziWriter ? '' : 'none';
+  updateAiArea();
+}
+
+function flipCard() {
+  cardFlipped = !cardFlipped;
+  document.getElementById('card-inner').classList.toggle('flipped', cardFlipped);
+  document.getElementById('fc-pre-actions').style.display = cardFlipped ? 'none' : 'flex';
+  document.getElementById('fc-post-actions').style.display = cardFlipped ? 'grid' : 'none';
+  if (cardFlipped && document.getElementById('opt-tts-auto')?.checked) speakCurrent();
+  updateAiArea();
+}
+
+document.getElementById('card-container').addEventListener('click', flipCard);
+
+function fcKnow() {
+  if (!cardFlipped) { flipCard(); return; }
+  const id = deck[deckIdx].id;
+  setKnown(id, true);
+  if (document.getElementById('opt-srs')?.checked) updateSRS(id, 5);
+  recordDailyActivity();
+  sessionKnown++;
+  renderHomeStats();
+  showCard(deckIdx + 1);
+}
+
+function fcUnknown() {
+  if (!cardFlipped) { flipCard(); return; }
+  const id = deck[deckIdx].id;
+  setUnknown(id, true);
+  if (document.getElementById('opt-srs')?.checked) updateSRS(id, 0);
+  recordDailyActivity();
+  sessionUnknown++;
+  renderHomeStats();
+  showCard(deckIdx + 1);
+}
+
+function fcSkip() { showCard(deckIdx + 1); }
+
+function fcStar() {
+  const w = deck[deckIdx];
+  const isNow = toggleStar(w.id);
+  const starF = document.getElementById('card-star-front');
+  const starB = document.getElementById('card-star-back');
+  starF.textContent = starB.textContent = isNow ? '★' : '☆';
+  starF.classList.toggle('active', isNow);
+  starB.classList.toggle('active', isNow);
+  renderHomeStats();
+  toast(isNow ? t('toast_starred') : t('toast_unstarred'));
+}
+
+document.getElementById('fc-know').addEventListener('click', fcKnow);
+document.getElementById('fc-unknown').addEventListener('click', fcUnknown);
+document.getElementById('fc-skip').addEventListener('click', fcSkip);
+document.getElementById('fc-skip2').addEventListener('click', fcSkip);
+document.getElementById('card-star-front').addEventListener('click', e => { e.stopPropagation(); fcStar(); });
+document.getElementById('card-star-back').addEventListener('click', e => { e.stopPropagation(); fcStar(); });
+document.getElementById('fc-back').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+function showFcEnd() {
+  document.getElementById('card-container').style.display = 'none';
+  document.getElementById('fc-pre-actions').style.display = 'none';
+  document.getElementById('fc-post-actions').style.display = 'none';
+  document.getElementById('fc-hint').style.display = 'none';
+  document.querySelectorAll('.key-hints').forEach(e => e.style.display = 'none');
+  document.getElementById('fc-end').style.display = 'block';
+  const sl = getStats().starred;
+  document.getElementById('fce-know').textContent = sessionKnown;
+  document.getElementById('fce-unknown').textContent = sessionUnknown;
+  document.getElementById('fce-star').textContent = sl;
+  document.getElementById('fc-end-sub').textContent = tf('fc_end_sub', deck.length);
+}
+
+document.getElementById('fce-repeat-unknown').addEventListener('click', () => {
+  const unknown = deck.filter(w => getP(w.id).unknown && !getP(w.id).known);
+  if (!unknown.length) { toast(t('toast_no_review')); return; }
+  deck = unknown;
+  if (document.getElementById('opt-shuffle').checked) shuffleArr(deck);
+  sessionKnown = 0; sessionUnknown = 0;
+  startFlashcard();
+});
+
+document.getElementById('fce-home').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('flashcard').classList.contains('active')) return;
+  if (document.getElementById('fc-end').style.display !== 'none') return;
+  switch (e.key) {
+    case ' ': e.preventDefault(); flipCard(); break;
+    case 'ArrowRight': fcKnow(); break;
+    case 'ArrowLeft': fcUnknown(); break;
+    case 'ArrowDown': case 's': case 'S': 
+      if (e.key === 'ArrowDown') fcSkip();
+      else fcStar();
+      break;
+  }
+});
+
+// ══════════════════════════════════════════════════
+// QUIZ MODE
+// ══════════════════════════════════════════════════
+let quizItems = [];
+let quizAnswered = false;
+
+function startQuiz() {
+  showView('quiz');
+  quizCorrect = 0; quizWrong = 0;
+  quizItems = [...deck];
+  deckIdx = 0;
+  document.getElementById('quiz-end').style.display = 'none';
+  document.querySelector('#quiz .quiz-question').style.display = '';
+  document.getElementById('quiz-options').style.display = '';
+  document.getElementById('quiz-feedback').classList.remove('show');
+  showQuizQ(0);
+}
+
+function getQuizDir() {
+  if (quizDir === 'mixed') return Math.random() < 0.5 ? 'zh2def' : 'def2zh';
+  return quizDir;
+}
+
+function showQuizQ(idx) {
+  if (idx >= quizItems.length) { showQuizEnd(); return; }
+  deckIdx = idx;
+  quizAnswered = false;
+
+  const q = quizItems[idx];
+  const dir = getQuizDir();
+  const pct = Math.round(idx / quizItems.length * 100);
+  document.getElementById('quiz-progress-bar').style.width = pct + '%';
+  document.getElementById('quiz-progress-text').textContent = `${idx + 1} / ${quizItems.length}`;
+  document.getElementById('quiz-score-correct').textContent = quizCorrect;
+  document.getElementById('quiz-score-wrong').textContent = quizWrong;
+  document.getElementById('quiz-feedback').classList.remove('show');
+
+  // Build question display
+  if (dir === 'zh2def') {
+    document.getElementById('quiz-prompt').textContent = t('quiz_prompt_zh2def');
+    document.getElementById('quiz-q-word').textContent = q.w;
+    document.getElementById('quiz-q-word').style.display = '';
+    document.getElementById('quiz-q-pinyin').textContent = q.p;
+    document.getElementById('quiz-q-pinyin').style.display = q.p ? '' : 'none';
+    document.getElementById('quiz-q-def').style.display = 'none';
+  } else {
+    document.getElementById('quiz-prompt').textContent = t('quiz_prompt_def2zh');
+    document.getElementById('quiz-q-def').textContent = q.d;
+    document.getElementById('quiz-q-def').style.display = '';
+    document.getElementById('quiz-q-word').style.display = 'none';
+    document.getElementById('quiz-q-pinyin').style.display = 'none';
+  }
+
+  // Build options
+  const pool = vocab.filter(v => v.id !== q.id && v.d && v.d !== q.d);
+  shuffleArr(pool);
+  const distractors = pool.slice(0, 3);
+  const opts = [...distractors, q];
+  shuffleArr(opts);
+
+  const letters = ['A', 'B', 'C', 'D'];
+  const container = document.getElementById('quiz-options');
+  container.innerHTML = '';
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    const displayText = dir === 'zh2def' ? (opt.d || '—') : opt.w;
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${escHtml(displayText)}</span>`;
+    btn.addEventListener('click', () => selectQuizOpt(btn, opt.id === q.id, q, dir));
+    container.appendChild(btn);
+  });
+}
+
+function selectQuizOpt(btn, isCorrect, q, dir) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+
+  const allBtns = document.querySelectorAll('.quiz-opt');
+  allBtns.forEach(b => {
+    b.disabled = true;
+    // find correct button
+    const bText = b.querySelector('span:last-child').textContent;
+    const correctText = dir === 'zh2def' ? q.d : q.w;
+    if (bText === correctText) b.classList.add('correct');
+  });
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    quizCorrect++;
+    setKnown(q.id, true);
+    showFeedback(true, q, dir);
+  } else {
+    btn.classList.add('wrong');
+    quizWrong++;
+    setUnknown(q.id, true);
+    showFeedback(false, q, dir);
+  }
+  renderHomeStats();
+}
+
+function showFeedback(correct, q, dir) {
+  const fb = document.getElementById('quiz-feedback');
+  fb.classList.add('show');
+  document.getElementById('fb-icon').textContent = correct ? '✅' : '❌';
+  document.getElementById('fb-title').textContent = correct ? t('fb_correct') : t('fb_wrong') + (dir === 'zh2def' ? '' : q.w);
+  const detail = correct
+    ? `${q.w}  ${q.p}  —  ${q.d}`
+    : `${q.w}  ${q.p}  —  ${q.d}`;
+  document.getElementById('fb-detail').textContent = detail;
+}
+
+document.getElementById('btn-next-q').addEventListener('click', () => {
+  showQuizQ(deckIdx + 1);
+});
+
+document.getElementById('quiz-back').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+function showQuizEnd() {
+  document.querySelector('#quiz .quiz-question').style.display = 'none';
+  document.getElementById('quiz-options').style.display = 'none';
+  document.getElementById('quiz-feedback').classList.remove('show');
+  document.getElementById('quiz-end').style.display = 'block';
+  const total = quizCorrect + quizWrong;
+  const pct = total ? Math.round(quizCorrect / total * 100) : 0;
+  document.getElementById('qe-correct').textContent = quizCorrect;
+  document.getElementById('qe-wrong').textContent = quizWrong;
+  document.getElementById('qe-pct').textContent = pct + '%';
+  document.getElementById('quiz-end-sub').textContent = tf('quiz_end_sub', total, quizCorrect, pct);
+}
+
+document.getElementById('qe-retry').addEventListener('click', () => {
+  const list = getFilteredVocab();
+  deck = buildDeck(list);
+  startQuiz();
+});
+document.getElementById('qe-home').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+// Quiz keyboard
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('quiz').classList.contains('active')) return;
+  if (document.getElementById('quiz-end').style.display !== 'none') return;
+  if (quizAnswered && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    showQuizQ(deckIdx + 1);
+    return;
+  }
+  const keys = { 'a': 0, 'A': 0, 'b': 1, 'B': 1, 'c': 2, 'C': 2, 'd': 3, 'D': 3 };
+  if (keys[e.key] !== undefined && !quizAnswered) {
+    const btns = document.querySelectorAll('.quiz-opt');
+    if (btns[keys[e.key]]) btns[keys[e.key]].click();
+  }
+});
+
+// ══════════════════════════════════════════════════
+// REVIEW VIEW
+// ══════════════════════════════════════════════════
+function showReview() {
+  showView('review');
+  const list = reviewMode === 'starred'
+    ? vocab.filter(v => getP(v.id).starred)
+    : vocab.filter(v => getP(v.id).unknown);
+
+  document.getElementById('review-title').textContent =
+    reviewMode === 'starred' ? tf('review_starred_title', list.length) : tf('review_unknown_title', list.length);
+
+  const container = document.getElementById('review-list');
+  const empty = document.getElementById('review-empty');
+  container.innerHTML = '';
+
+  if (!list.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.forEach(w => {
+    const p = getP(w.id);
+    const item = document.createElement('div');
+    item.className = 'word-item';
+    item.innerHTML = `
+      <div class="wi-word">${escHtml(w.w)}</div>
+      <div class="wi-info">
+        <div class="wi-pinyin">${escHtml(w.p)}</div>
+        <div class="wi-def">${escHtml(w.d)}</div>
+        <div class="wi-badges">
+          <span class="badge">${escHtml(w.l)}</span>
+          ${p.starred ? `<span class="badge star">${escHtml(t('wi_badge_star'))}</span>` : ''}
+          ${p.unknown ? `<span class="badge unknown">${escHtml(t('wi_badge_unknown'))}</span>` : ''}
+        </div>
+      </div>
+      <div class="wi-actions">
+        <button class="btn-wi" data-id="${w.id}" data-action="star">${escHtml(p.starred ? t('wi_unstar') : t('wi_star'))}</button>
+        ${p.unknown ? `<button class="btn-wi" data-id="${w.id}" data-action="clear">${escHtml(t('wi_mark_known'))}</button>` : ''}
+      </div>
+    `;
+    container.appendChild(item);
+  });
+
+  container.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = parseInt(btn.dataset.id);
+    const action = btn.dataset.action;
+    if (action === 'star') {
+      toggleStar(id);
+      saveProgress();
+      renderHomeStats();
+      showReview();
+    } else if (action === 'clear') {
+      setKnown(id, true);
+      renderHomeStats();
+      showReview();
     }
+  });
+}
 
-    function animate() {
-      requestAnimationFrame(animate);
-      const newTime = new Date();
-      const shouldIncrementIndex = cooldown > 0;
-      const dt = (newTime - time) / 1000;
-      time = newTime;
-      cooldown -= dt;
-      if (cooldown <= 0) {
-        if (shouldIncrementIndex) textIndex++;
-        doMorph();
-      } else {
-        doCooldown();
-      }
+document.getElementById('review-back').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+// ══════════════════════════════════════════════════
+// SRS  (SM-2 algorithm)
+// ══════════════════════════════════════════════════
+const SRS_KEY = 'tocfl_srs_v1';
+let srsData = {};
+
+function loadSRS() {
+  try { srsData = JSON.parse(localStorage.getItem(SRS_KEY) || '{}'); } catch { srsData = {}; }
+}
+function saveSRS() { localStorage.setItem(SRS_KEY, JSON.stringify(srsData)); }
+function getSRS(id) {
+  return srsData[id] || { ef: 2.5, interval: 0, due: 0, reps: 0 };
+}
+// quality: 0=fail,3=hard,4=good,5=easy (SM-2 standard)
+function updateSRS(id, quality) {
+  let s = getSRS(id);
+  if (quality < 3) {
+    s.reps = 0; s.interval = 1;
+  } else {
+    if (s.reps === 0) s.interval = 1;
+    else if (s.reps === 1) s.interval = 6;
+    else s.interval = Math.round(s.interval * s.ef);
+    s.reps++;
+    s.ef = Math.max(1.3, s.ef + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+  }
+  s.due = Date.now() + s.interval * 86400000;
+  srsData[id] = s;
+  saveSRS();
+}
+function isDue(id) {
+  const s = getSRS(id);
+  return s.reps === 0 || Date.now() >= s.due;
+}
+function buildSRSDeck(list) {
+  const due = list.filter(v => isDue(v.id));
+  shuffleArr(due);
+  return due;
+}
+
+// ══════════════════════════════════════════════════
+// SWIPE GESTURES (flashcard)
+// ══════════════════════════════════════════════════
+(function addSwipe() {
+  const cc = document.getElementById('card-container');
+  let tx = 0, ty = 0, startX = 0, startY = 0, dragging = false;
+  cc.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    tx = 0; ty = 0; dragging = false;
+  }, { passive: true });
+  cc.addEventListener('touchmove', e => {
+    tx = e.touches[0].clientX - startX;
+    ty = e.touches[0].clientY - startY;
+    dragging = Math.abs(tx) > 8;
+    if (dragging) {
+      const ci = document.getElementById('card-inner');
+      ci.style.transition = 'none';
+      ci.style.transform = cardFlipped ? `rotateY(180deg) translateX(${-tx}px)` : `translateX(${tx}px)`;
     }
+  }, { passive: true });
+  cc.addEventListener('touchend', () => {
+    const ci = document.getElementById('card-inner');
+    ci.style.transition = '';
+    ci.style.transform = '';
+    if (!dragging) return;
+    if (Math.abs(tx) < 60) return; // not far enough
+    if (tx > 0) { // swipe right = know
+      if (cardFlipped) fcKnow(); else { flipCard(); }
+    } else {       // swipe left = unknown
+      if (cardFlipped) fcUnknown(); else { flipCard(); }
+    }
+  });
+})();
 
-    animate();
-  </script>
+// ══════════════════════════════════════════════════
+// LISTENING MODE
+// ══════════════════════════════════════════════════
+let listenItems = [], listenIdx = 0, listenCorrect = 0, listenWrong = 0;
+
+function startListen() {
+  listenItems = [...deck];
+  listenIdx = 0; listenCorrect = 0; listenWrong = 0;
+  showView('listen');
+  document.getElementById('listen-end').style.display = 'none';
+  document.getElementById('listen-card').style.display = '';
+  document.getElementById('listen-opts').style.display = '';
+  document.getElementById('listen-feedback').classList.remove('show');
+  showListenQ(0);
+}
+
+function showListenQ(idx) {
+  if (idx >= listenItems.length) { showListenEnd(); return; }
+  listenIdx = idx;
+  const q = listenItems[idx];
+  document.getElementById('listen-feedback').classList.remove('show');
+  document.getElementById('listen-progress-text').textContent = `${idx+1} / ${listenItems.length}`;
+  document.getElementById('listen-progress-bar').style.width = Math.round(idx/listenItems.length*100)+'%';
+
+  // Build 4 choices
+  const pool = vocab.filter(v => v.id !== q.id && v.w !== q.w);
+  shuffleArr(pool);
+  const opts = [q, ...pool.slice(0,3)];
+  shuffleArr(opts);
+  const container = document.getElementById('listen-opts');
+  container.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'listen-opt';
+    btn.textContent = opt.w;
+    btn.addEventListener('click', () => selectListenOpt(btn, opt.id === q.id, q));
+    container.appendChild(btn);
+  });
+
+  // Auto-play
+  setTimeout(() => speakWord(q.w), 400);
+}
+
+function selectListenOpt(btn, isCorrect, q) {
+  document.querySelectorAll('.listen-opt').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === q.w) b.classList.add('correct');
+  });
+  if (!isCorrect) { btn.classList.add('wrong'); listenWrong++; setUnknown(q.id,true); }
+  else { listenCorrect++; setKnown(q.id,true); }
+  renderHomeStats();
+  const fb = document.getElementById('listen-feedback');
+  document.getElementById('lfb-icon').textContent = isCorrect ? '✅' : '❌';
+  document.getElementById('lfb-title').textContent = isCorrect ? t('fb_correct') : t('fb_wrong')+q.w;
+  document.getElementById('lfb-detail').textContent = `${q.w} ${q.p} — ${q.d}`;
+  fb.classList.add('show');
+}
+
+function showListenEnd() {
+  document.getElementById('listen-card').style.display = 'none';
+  document.getElementById('listen-opts').style.display = 'none';
+  document.getElementById('listen-feedback').classList.remove('show');
+  document.getElementById('listen-end').style.display = 'block';
+  const total = listenCorrect + listenWrong;
+  const pct = total ? Math.round(listenCorrect/total*100) : 0;
+  document.getElementById('listen-end-sub').textContent = tf('listen_end_sub', total, listenCorrect, pct);
+}
+
+function speakWord(word) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(word);
+  utt.lang = 'zh-TW'; utt.rate = 0.85;
+  speechSynthesis.speak(utt);
+}
+
+document.getElementById('btn-play-audio').addEventListener('click', () => {
+  if (listenItems[listenIdx]) speakWord(listenItems[listenIdx].w);
+});
+document.getElementById('btn-listen-next').addEventListener('click', () => showListenQ(listenIdx+1));
+document.getElementById('listen-back').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+document.getElementById('le-retry').addEventListener('click', () => {
+  const list = getFilteredVocab(); deck = buildDeck(list); startListen();
+});
+document.getElementById('le-home').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+// ══════════════════════════════════════════════════
+// TYPING PRACTICE MODE
+// ══════════════════════════════════════════════════
+let typingItems = [], typingIdx = 0, typingCorrect = 0, typingWrong = 0, typingAnswered = false;
+
+function startTyping() {
+  typingItems = [...deck];
+  typingIdx = 0; typingCorrect = 0; typingWrong = 0;
+  showView('typing');
+  document.getElementById('typing-end').style.display = 'none';
+  showTypingQ(0);
+}
+
+function showTypingQ(idx) {
+  if (idx >= typingItems.length) { showTypingEnd(); return; }
+  typingIdx = idx; typingAnswered = false;
+  const q = typingItems[idx];
+  document.getElementById('typing-progress-text').textContent = `${idx+1} / ${typingItems.length}`;
+  document.getElementById('typing-progress-bar').style.width = Math.round(idx/typingItems.length*100)+'%';
+  document.getElementById('typing-def').textContent = q.d || t('no_def');
+  document.getElementById('typing-word-display').textContent = '?';
+  document.getElementById('typing-pinyin-display').textContent = '';
+  const input = document.getElementById('typing-input');
+  input.value = '';
+  input.className = 'typing-input';
+  input.disabled = false;
+  document.getElementById('typing-feedback').textContent = '';
+  document.getElementById('typing-feedback').className = 'typing-feedback';
+  document.getElementById('btn-typing-next').style.display = 'none';
+  document.getElementById('typing-hint').style.display = '';
+  input.focus();
+}
+
+function checkTyping() {
+  if (typingAnswered) return;
+  const q = typingItems[typingIdx];
+  const val = document.getElementById('typing-input').value.trim();
+  if (!val) return;
+  typingAnswered = true;
+  const correct = val === q.w;
+  document.getElementById('typing-word-display').textContent = q.w;
+  document.getElementById('typing-pinyin-display').textContent = q.p;
+  const input = document.getElementById('typing-input');
+  input.disabled = true;
+  const fb = document.getElementById('typing-feedback');
+  if (correct) {
+    typingCorrect++; setKnown(q.id,true);
+    input.classList.add('correct');
+    fb.textContent = '✅ ' + t('fb_correct');
+    fb.className = 'typing-feedback ok';
+  } else {
+    typingWrong++; setUnknown(q.id,true);
+    input.classList.add('wrong');
+    fb.textContent = '❌ ' + t('fb_wrong') + q.w;
+    fb.className = 'typing-feedback err';
+  }
+  renderHomeStats();
+  document.getElementById('btn-typing-next').style.display = '';
+  document.getElementById('typing-hint').style.display = 'none';
+}
+
+document.getElementById('btn-typing-check').addEventListener('click', checkTyping);
+document.getElementById('typing-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { if (typingAnswered) showTypingQ(typingIdx+1); else checkTyping(); }
+});
+document.getElementById('btn-typing-next').addEventListener('click', () => showTypingQ(typingIdx+1));
+document.getElementById('typing-hint').addEventListener('click', () => {
+  if (typingAnswered) return;
+  const q = typingItems[typingIdx];
+  document.getElementById('typing-word-display').textContent = q.w;
+  document.getElementById('typing-pinyin-display').textContent = q.p;
+  typingAnswered = true;
+  typingWrong++;
+  document.getElementById('typing-input').disabled = true;
+  document.getElementById('typing-input').classList.add('wrong');
+  document.getElementById('btn-typing-next').style.display = '';
+  document.getElementById('typing-hint').style.display = 'none';
+  setUnknown(q.id,true); renderHomeStats();
+});
+document.getElementById('typing-back').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+document.getElementById('te-retry').addEventListener('click', () => {
+  const list = getFilteredVocab(); deck = buildDeck(list); startTyping();
+});
+document.getElementById('te-home').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+function showTypingEnd() {
+  document.getElementById('typing-end').style.display = 'block';
+  const total = typingCorrect + typingWrong;
+  const pct = total ? Math.round(typingCorrect/total*100) : 0;
+  document.getElementById('typing-end-sub').textContent = tf('typing_end_sub', total, typingCorrect, pct);
+}
+
+// ══════════════════════════════════════════════════
+// STATS VIEW
+// ══════════════════════════════════════════════════
+document.getElementById('btn-stats-nav').addEventListener('click', showStats);
+document.getElementById('stats-back').addEventListener('click', () => { showView('home'); renderHomeStats(); });
+
+function showStats() {
+  showView('stats-view');
+  const s = getStats();
+  document.getElementById('sc-known').textContent = s.known;
+  document.getElementById('sc-unknown').textContent = s.unknown;
+  const pct = vocab.length ? Math.round(s.known/vocab.length*100) : 0;
+  document.getElementById('sc-pct').textContent = pct + '%';
+
+  // Daily chart (last 14 days)
+  const dailyKey = 'tocfl_daily';
+  let daily = {};
+  try { daily = JSON.parse(localStorage.getItem(dailyKey) || '{}'); } catch {}
+  const today = new Date();
+  const labels = [], data = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    labels.push(key.slice(5)); // MM-DD
+    data.push(daily[key] || 0);
+  }
+  drawBarChart('stats-chart', labels, data);
+
+  // Level breakdown
+  const levels = [...new Set(vocab.map(v=>v.l))].sort();
+  const container = document.getElementById('level-bars');
+  container.innerHTML = '';
+  levels.forEach(lv => {
+    const total = vocab.filter(v=>v.l===lv).length;
+    const known = vocab.filter(v=>v.l===lv && getP(v.id).known).length;
+    const pct = total ? Math.round(known/total*100) : 0;
+    container.innerHTML += `<div class="level-bar-row">
+      <span class="level-bar-label">${escHtml(lv)}</span>
+      <div class="level-bar-track"><div class="level-bar-fill" style="width:${pct}%"></div></div>
+      <span class="level-bar-count">${known}/${total}</span>
+    </div>`;
+  });
+}
+
+function drawBarChart(canvasId, labels, data) {
+  const canvas = document.getElementById(canvasId);
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 600;
+  const H = 180;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0,0,W,H);
+  const max = Math.max(...data, 1);
+  const pad = { l:8, r:8, t:10, b:28 };
+  const bw = (W - pad.l - pad.r) / labels.length;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  ctx.fillStyle = isDark ? '#6b89ff' : '#4f6ef7';
+  data.forEach((v,i) => {
+    const bh = ((H - pad.t - pad.b) * v / max);
+    const x = pad.l + i * bw + bw * 0.15;
+    const y = H - pad.b - bh;
+    ctx.fillRect(x, y, bw * 0.7, bh);
+  });
+  ctx.fillStyle = isDark ? '#8b92b8' : '#5a6080';
+  ctx.font = `${Math.min(10, bw*0.6)}px sans-serif`;
+  ctx.textAlign = 'center';
+  labels.forEach((lbl,i) => {
+    if (i % Math.ceil(labels.length/7) === 0) {
+      ctx.fillText(lbl, pad.l + i*bw + bw/2, H - 6);
+    }
+  });
+}
+
+function recordDailyActivity() {
+  const key = new Date().toISOString().slice(0,10);
+  const dailyKey = 'tocfl_daily';
+  let daily = {};
+  try { daily = JSON.parse(localStorage.getItem(dailyKey) || '{}'); } catch {}
+  daily[key] = (daily[key] || 0) + 1;
+  // trim to 30 days
+  const keys = Object.keys(daily).sort();
+  if (keys.length > 30) { delete daily[keys[0]]; }
+  localStorage.setItem(dailyKey, JSON.stringify(daily));
+}
+
+// ══════════════════════════════════════════════════
+// SRS integration into flashcard
+// ══════════════════════════════════════════════════
+loadSRS();
+
+// Patch buildDeck to optionally use SRS
+function buildDeckSRS(list) {
+  if (document.getElementById('opt-srs')?.checked) {
+    const d = buildSRSDeck(list);
+    return d.length ? d : buildDeck(list); // fallback if nothing due
+  }
+  return buildDeck(list);
+}
+
+// ══════════════════════════════════════════════════
+// STROKE ORDER (HanziWriter)
+// ══════════════════════════════════════════════════
+let hwWriter = null;
+document.getElementById('btn-stroke').addEventListener('click', () => {
+  if (!window.HanziWriter) return;
+  const w = deck[deckIdx];
+  if (!w) return;
+  const panel = document.getElementById('stroke-panel');
+  const target = document.getElementById('hanzi-target');
+  target.innerHTML = '';
+  panel.style.display = '';
+  if (hwWriter) { try { hwWriter = null; } catch(e) {} }
+  hwWriter = HanziWriter.create('hanzi-target', w.w[0], {
+    width: 130, height: 130, padding: 8,
+    showOutline: true, strokeColor: '#4f6ef7', outlineColor: '#dde3f4',
+    delayBetweenStrokes: 200,
+  });
+  hwWriter.animateCharacter();
+});
+document.getElementById('stroke-close').addEventListener('click', () => {
+  document.getElementById('stroke-panel').style.display = 'none';
+});
+
+// ══════════════════════════════════════════════════
+// PWA (install works when served via HTTPS or localhost, not file://)
+// ══════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function escHtml(str) {
+  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════════════════════
+// STREAK
+// ══════════════════════════════════════════════════
+function checkStreak() {
+  const today = new Date().toDateString();
+  const last  = localStorage.getItem('tocfl_streak_date');
+  let streak  = parseInt(localStorage.getItem('tocfl_streak') || '0');
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (last === today) { /* same day, no change */ }
+  else if (last === yesterday) { streak += 1; }
+  else { streak = 1; }
+  localStorage.setItem('tocfl_streak', streak);
+  localStorage.setItem('tocfl_streak_date', today);
+  const el   = document.getElementById('prog-streak');
+  const row  = document.getElementById('streak-row');
+  const nav  = document.getElementById('nav-streak');
+  const navN = document.getElementById('nav-streak-count');
+  if (el)   el.textContent  = streak;
+  if (row)  row.style.display  = streak > 0 ? '' : 'none';
+  if (nav)  nav.style.display  = streak > 1 ? '' : 'none';
+  if (navN) navN.textContent   = streak;
+}
+
+// ══════════════════════════════════════════════════
+// TTS
+// ══════════════════════════════════════════════════
+function speakCurrent() {
+  if (!window.speechSynthesis || !deck[deckIdx]) return;
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(deck[deckIdx].w);
+  utt.lang = 'zh-TW';
+  utt.rate = 0.85;
+  const btn = document.getElementById('fc-tts');
+  if (btn) {
+    btn.classList.add('busy');
+    utt.onend  = () => btn.classList.remove('busy');
+    utt.onerror = () => btn.classList.remove('busy');
+  }
+  speechSynthesis.speak(utt);
+}
+document.getElementById('fc-tts').addEventListener('click', e => {
+  e.stopPropagation();
+  speakCurrent();
+});
+
+// ══════════════════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════════════════
+function renderSearchResults(q) {
+  const box = document.getElementById('search-results');
+  if (!q) { box.innerHTML = ''; box.classList.remove('show'); return; }
+  const ql = q.toLowerCase();
+  const hits = vocab.filter(v =>
+    v.w.includes(q) ||
+    (v.p && v.p.toLowerCase().includes(ql)) ||
+    (v.d && v.d.toLowerCase().includes(ql))
+  );
+  box.innerHTML = '';
+  const meta = document.createElement('div');
+  meta.className = 'sr-meta';
+  const countEl = document.createElement('div');
+  countEl.className = 'sr-count';
+  if (!hits.length) {
+    countEl.textContent = t('search_no_results');
+    meta.appendChild(countEl);
+    box.appendChild(meta);
+    box.classList.add('show');
+    return;
+  }
+  countEl.textContent = tf('search_count', hits.length) + (hits.length > 30 ? ' ' + t('search_cap') : '');
+  const hintEl = document.createElement('div');
+  hintEl.className = 'sr-hint';
+  hintEl.textContent = t('search_tap');
+  meta.appendChild(countEl);
+  meta.appendChild(hintEl);
+  box.appendChild(meta);
+  const list = document.createElement('div');
+  list.className = 'sr-list';
+  hits.slice(0, 30).forEach(v => {
+    const item = document.createElement('div');
+    item.className = 'sr-item';
+    const wEl = document.createElement('span'); wEl.className = 'sr-word'; wEl.textContent = v.w;
+    const pEl = document.createElement('span'); pEl.className = 'sr-pin';  pEl.textContent = v.p || '';
+    const dEl = document.createElement('span'); dEl.className = 'sr-def';  dEl.textContent = v.d || t('no_def');
+    item.appendChild(wEl); item.appendChild(pEl); item.appendChild(dEl);
+    item.addEventListener('click', () => {
+      deck = [v]; deckIdx = 0; sessionKnown = 0; sessionUnknown = 0;
+      startFlashcard();
+    });
+    list.appendChild(item);
+  });
+  box.appendChild(list);
+  box.classList.add('show');
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  document.getElementById('search-clear').classList.toggle('show', !!e.target.value);
+  renderSearchResults(e.target.value.trim());
+  updateDeckInfo();
+});
+document.getElementById('search-clear').addEventListener('click', () => {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').classList.remove('show');
+  renderSearchResults('');
+  updateDeckInfo();
+});
+
+// ══════════════════════════════════════════════════
+// SETTINGS MODAL
+// ══════════════════════════════════════════════════
+let groqKey = localStorage.getItem('tocfl_groq_key') || '';
+function openSettings() {
+  document.getElementById('groq-input').value = groqKey;
+  document.getElementById('modal-settings').classList.add('show');
+}
+function closeSettings() {
+  document.getElementById('modal-settings').classList.remove('show');
+}
+document.getElementById('btn-settings').addEventListener('click', openSettings);
+document.getElementById('modal-close').addEventListener('click', closeSettings);
+document.getElementById('modal-settings').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-settings')) closeSettings();
+});
+document.getElementById('btn-groq-save').addEventListener('click', () => {
+  groqKey = document.getElementById('groq-input').value.trim();
+  localStorage.setItem('tocfl_groq_key', groqKey);
+  closeSettings();
+  toast(groqKey ? t('toast_key_saved') : t('toast_key_clear'));
+});
+
+// ══════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════════════════
+document.getElementById('btn-export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `tocfl_progress_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(t('toast_exported'));
+});
+document.getElementById('btn-import-trigger').addEventListener('click', () =>
+  document.getElementById('file-import').click()
+);
+document.getElementById('file-import').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (typeof parsed !== 'object' || parsed === null) throw new Error('bad format');
+      progress = parsed;
+      saveProgress();
+      renderHomeStats();
+      closeSettings();
+      toast(t('toast_imported'));
+    } catch { toast(t('toast_import_err')); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ══════════════════════════════════════════════════
+// AI WORD ANALYSIS
+// ══════════════════════════════════════════════════
+function updateAiArea() {
+  const wrap = document.getElementById('fc-ai-wrap');
+  if (!wrap) return;
+  const show = cardFlipped && !!groqKey;
+  wrap.style.display = show ? '' : 'none';
+  const aiEx = document.getElementById('ai-ex');
+  if (aiEx) { aiEx.innerHTML = ''; aiEx.classList.remove('show'); }
+  const btn = document.getElementById('btn-ai');
+  if (btn) { btn.disabled = false; btn.innerHTML = `<span>${t('ai_btn')}</span>`; }
+}
+
+function buildAiCard(d) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-card';
+  const sections = [
+    { tag: '用法', cls: 'blue',   val: d.usage },
+    { tag: '搭配', cls: 'purple', val: d.collocations },
+    { tag: '例句', cls: 'green',  val: d.example },
+    { tag: '注意', cls: 'orange', val: d.note },
+  ];
+  sections.forEach(({ tag, cls, val }) => {
+    if (!val || (Array.isArray(val) && !val.length) || val === '') return;
+    const row = document.createElement('div');
+    row.className = 'ai-row';
+    const tagEl = document.createElement('span');
+    tagEl.className = `ai-tag ai-tag-${cls}`;
+    tagEl.textContent = tag;
+    row.appendChild(tagEl);
+    const body = document.createElement('div');
+    body.className = 'ai-body';
+    if (tag === '搭配' && Array.isArray(val)) {
+      val.forEach(c => {
+        if (!c) return;
+        const chip = document.createElement('span');
+        chip.className = 'ai-chip';
+        chip.textContent = String(c);
+        body.appendChild(chip);
+      });
+    } else if (tag === '例句' && val && typeof val === 'object') {
+      if (val.zh) { const z = document.createElement('div'); z.className = 'ai-ex-zh'; z.textContent = val.zh; body.appendChild(z); }
+      if (val.en) { const e = document.createElement('div'); e.className = 'ai-ex-en'; e.textContent = val.en; body.appendChild(e); }
+    } else {
+      const span = document.createElement('span');
+      span.textContent = String(val);
+      body.appendChild(span);
+    }
+    row.appendChild(body);
+    wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+document.getElementById('btn-ai').addEventListener('click', async () => {
+  const w = deck[deckIdx];
+  if (!w || !groqKey) return;
+  const btn  = document.getElementById('btn-ai');
+  const aiEx = document.getElementById('ai-ex');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+  aiEx.innerHTML = '';
+  aiEx.classList.remove('show');
+  try {
+    const prompt = `提供華語詞彙「${w.w}」（拼音：${w.p}，釋義：${w.d || ''}）的學習分析，以繁體中文回答，只輸出以下JSON（不加其他說明）：
+{"usage":"詞性與基本用法說明（30字內）","collocations":["常見搭配1","搭配2","搭配3"],"example":{"zh":"自然短例句","en":"English translation"},"note":"學習重點或易混淆點（若無則空字串）"}`;
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 350,
+        temperature: 0.4,
+        response_format: { type: 'json_object' }
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content?.trim() || '';
+    let parsed;
+    try {
+      const m = raw.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(m ? m[0] : raw);
+    } catch {
+      const p = document.createElement('span');
+      p.className = 'ai-plain';
+      p.textContent = raw;
+      aiEx.appendChild(p);
+      aiEx.classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = `<span>${t('ai_btn')}</span>`;
+      return;
+    }
+    // Word header: show word, pinyin, level, and English definition before the analysis
+    const hdr = document.createElement('div');
+    hdr.className = 'ai-word-header';
+    const hwEl  = document.createElement('span'); hwEl.className  = 'ai-word-hw';  hwEl.textContent  = w.w;
+    const pinEl = document.createElement('span'); pinEl.className = 'ai-word-pin'; pinEl.textContent = w.p || '';
+    hdr.appendChild(hwEl);
+    hdr.appendChild(pinEl);
+    if (w.l) { const lvlEl = document.createElement('span'); lvlEl.className = 'ai-word-lvl'; lvlEl.textContent = w.l; hdr.appendChild(lvlEl); }
+    if (w.d) { const defEl = document.createElement('div');  defEl.className  = 'ai-word-def'; defEl.textContent  = w.d; hdr.appendChild(defEl); }
+    aiEx.appendChild(hdr);
+    aiEx.appendChild(buildAiCard(parsed));
+    aiEx.classList.add('show');
+  } catch (err) {
+    const p = document.createElement('span');
+    p.className = 'ai-plain';
+    p.textContent = `⚠ ${err.message}`;
+    aiEx.appendChild(p);
+    aiEx.classList.add('show');
+  }
+  btn.disabled = false;
+  btn.innerHTML = `<span>${t('ai_btn')}</span>`;
+});
+</script>
 </body>
 </html>

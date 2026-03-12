@@ -1,0 +1,17 @@
+{
+  "name": "TOCFL 華語詞彙練習",
+  "short_name": "TOCFL",
+  "description": "14,425 TOCFL Chinese vocabulary flashcards",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f4ff",
+  "theme_color": "#4f6ef7",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%234f6ef7'/><text y='140' x='96' text-anchor='middle' font-size='120' font-family='serif'>華</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
