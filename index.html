@@ -58,7 +58,7 @@
     box-shadow: var(--shadow);
   }
   .nav-brand { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-  .nav-brand-title { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .nav-brand-title { display: none; }
   .nav-brand-meta { color: var(--text2); font-weight: 400; font-size: 0.8rem; white-space: nowrap; }
   .nav-right { display: flex; gap: 10px; align-items: center; }
   .btn-icon {
@@ -169,6 +169,15 @@
   .fc-progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.3s; }
 
   .card-container { perspective: 1000px; height: 320px; margin-bottom: 20px; cursor: pointer; touch-action: pan-y; }
+  .swipe-badge {
+    position: absolute; top: 18px; padding: 5px 10px; border-radius: 10px;
+    font-size: 0.75rem; font-weight: 800; letter-spacing: 0.04em; opacity: 0;
+    pointer-events: none; transition: opacity .12s ease;
+  }
+  .swipe-badge.left { left: 16px; background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
+  .swipe-badge.right { right: 16px; background: #dcfce7; color: var(--green); border: 1px solid #bbf7d0; }
+  [data-theme="dark"] .swipe-badge.left { background: #7f1d1d; color: #fca5a5; border-color: #b91c1c; }
+  [data-theme="dark"] .swipe-badge.right { background: #14532d; color: #86efac; border-color: #16a34a; }
   .card-inner {
     position: relative; width: 100%; height: 100%;
     transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
@@ -204,8 +213,20 @@
   .swipe-guide { display: none; text-align: center; font-size: 0.78rem; color: var(--text2); margin: -8px 0 16px; }
   #flashcard.mobile-swipe .swipe-guide { display: block; }
   #flashcard.mobile-swipe #fc-pre-actions,
-  #flashcard.mobile-swipe #fc-post-actions,
   #flashcard.mobile-swipe .key-hints { display: none !important; }
+  #flashcard.mobile-swipe #fc-post-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    position: sticky;
+    bottom: 8px;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(4px);
+    padding: 10px 0 4px;
+    margin-top: 4px;
+  }
+  #flashcard.mobile-swipe #fc-skip2 { display: none; }
+  #flashcard.mobile-swipe .btn-action { padding: 16px 10px; }
   .fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .fc-actions.three { grid-template-columns: 1fr 1fr 1fr; }
   .btn-action {
@@ -707,6 +728,8 @@
         <div class="card-def" id="card-def"></div>
       </div>
     </div>
+    <div class="swipe-badge left" id="swipe-badge-left">← <span data-i18n="swipe_left">不認識</span></div>
+    <div class="swipe-badge right" id="swipe-badge-right"><span data-i18n="swipe_right">認識</span> →</div>
   </div>
 
   <!-- Stroke Order Panel (outside card, below card-container) -->
@@ -1332,6 +1355,7 @@ let quizDir = 'zh2def';
 let deck = [];       // current session deck
 let deckIdx = 0;
 let cardFlipped = false;
+let suppressFlipUntil = 0;
 let sessionKnown = 0, sessionUnknown = 0;
 let quizCorrect = 0, quizWrong = 0;
 let reviewMode = null; // 'starred' | 'unknown'
@@ -1657,6 +1681,10 @@ function showCard(idx) {
   const cc = document.getElementById('card-container');
   cc.style.transform = '';
   cc.style.transition = '';
+  const bl = document.getElementById('swipe-badge-left');
+  const br = document.getElementById('swipe-badge-right');
+  if (bl) bl.style.opacity = '0';
+  if (br) br.style.opacity = '0';
 
   const w = deck[idx];
   document.getElementById('card-word').textContent = w.w;
@@ -1695,12 +1723,17 @@ function flipCard() {
   if (!isMobile) {
     document.getElementById('fc-pre-actions').style.display = cardFlipped ? 'none' : 'flex';
     document.getElementById('fc-post-actions').style.display = cardFlipped ? 'grid' : 'none';
+  } else {
+    document.getElementById('fc-post-actions').style.display = cardFlipped ? 'grid' : 'none';
   }
   if (cardFlipped && document.getElementById('opt-tts-auto')?.checked) speakCurrent();
   updateAiArea();
 }
 
-document.getElementById('card-container').addEventListener('click', flipCard);
+document.getElementById('card-container').addEventListener('click', () => {
+  if (Date.now() < suppressFlipUntil) return;
+  flipCard();
+});
 
 function fcKnow() {
   if (!cardFlipped) { flipCard(); return; }
@@ -2049,36 +2082,52 @@ function isMobileSwipeMode() {
 // ══════════════════════════════════════════════════
 (function addSwipe() {
   const cc = document.getElementById('card-container');
-  let tx = 0, ty = 0, startX = 0, startY = 0, dragging = false;
-  cc.addEventListener('touchstart', e => {
-    if (!isMobileSwipeMode()) return;
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-    tx = 0; ty = 0; dragging = false;
-  }, { passive: true });
-  cc.addEventListener('touchmove', e => {
-    if (!isMobileSwipeMode()) return;
-    tx = e.touches[0].clientX - startX;
-    ty = e.touches[0].clientY - startY;
-    dragging = Math.abs(tx) > 8 && Math.abs(tx) > Math.abs(ty);
-    if (dragging) {
-      cc.style.transition = 'none';
-      const deg = Math.max(-12, Math.min(12, tx / 14));
-      cc.style.transform = `translateX(${tx}px) rotate(${deg}deg)`;
-    }
-  }, { passive: true });
-  cc.addEventListener('touchend', () => {
-    if (!isMobileSwipeMode()) return;
+  let sx = 0, sy = 0, tx = 0, ty = 0, dragging = false, pointerActive = false;
+  const leftBadge = document.getElementById('swipe-badge-left');
+  const rightBadge = document.getElementById('swipe-badge-right');
+
+  function resetSwipeUi() {
     cc.style.transition = 'transform .18s ease';
     cc.style.transform = '';
-    if (!dragging) return;
-    if (Math.abs(tx) < 60) return; // not far enough
-    if (!cardFlipped) return; // mobile flow: tap first to view meaning
-    if (tx > 0) { // swipe right = know
-      fcKnow();
-    } else {       // swipe left = unknown
-      fcUnknown();
-    }
+    if (leftBadge) leftBadge.style.opacity = '0';
+    if (rightBadge) rightBadge.style.opacity = '0';
+  }
+
+  cc.addEventListener('pointerdown', e => {
+    if (!isMobileSwipeMode() || e.pointerType === 'mouse') return;
+    pointerActive = true;
+    sx = e.clientX; sy = e.clientY; tx = 0; ty = 0; dragging = false;
   });
+
+  cc.addEventListener('pointermove', e => {
+    if (!pointerActive || !isMobileSwipeMode()) return;
+    tx = e.clientX - sx;
+    ty = e.clientY - sy;
+    dragging = Math.abs(tx) > 10 && Math.abs(tx) > Math.abs(ty);
+    if (!dragging) return;
+    e.preventDefault();
+    cc.style.transition = 'none';
+    const deg = Math.max(-10, Math.min(10, tx / 16));
+    cc.style.transform = `translateX(${tx}px) rotate(${deg}deg)`;
+    const op = Math.min(1, Math.abs(tx) / 90);
+    if (leftBadge) leftBadge.style.opacity = tx < 0 ? String(op) : '0';
+    if (rightBadge) rightBadge.style.opacity = tx > 0 ? String(op) : '0';
+  }, { passive: false });
+
+  function finishSwipe() {
+    if (!pointerActive) return;
+    pointerActive = false;
+    const passed = Math.abs(tx) >= 70 && dragging;
+    const canGrade = cardFlipped;
+    resetSwipeUi();
+    if (!passed || !canGrade) return;
+    suppressFlipUntil = Date.now() + 280;
+    if (tx > 0) fcKnow();
+    else fcUnknown();
+  }
+
+  cc.addEventListener('pointerup', finishSwipe);
+  cc.addEventListener('pointercancel', finishSwipe);
 })();
 
 // ══════════════════════════════════════════════════
