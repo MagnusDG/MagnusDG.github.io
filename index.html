@@ -400,6 +400,14 @@
     .deck-info-compact { display: flex; align-items: baseline; gap: 6px; justify-content: center; }
     .deck-count-val { font-size: 1.6rem; }
     .mode-tab { min-width: 60px; }
+    #flashcard.mobile-swipe { padding: 14px 12px 24px; }
+    #flashcard.mobile-swipe .card-container { height: 58vh; max-height: 430px; min-height: 300px; margin-bottom: 12px; }
+    #flashcard.mobile-swipe .card-face { padding: 24px 20px; }
+    #flashcard.mobile-swipe .card-word { font-size: 2.5rem; }
+    #flashcard.mobile-swipe .card-word-alt { font-size: 0.95rem; margin-bottom: 8px; }
+    #flashcard.mobile-swipe .card-def { font-size: 0.98rem; max-height: 34vh; }
+    #flashcard.mobile-swipe #fc-post-actions { bottom: 0; margin-top: 2px; }
+    #flashcard.mobile-swipe .btn-action { font-size: 0.92rem; }
   }
   /* ── SEARCH ── */
   .search-wrap { position: relative; margin-bottom: 20px; }
@@ -1735,8 +1743,9 @@ document.getElementById('card-container').addEventListener('click', () => {
   flipCard();
 });
 
-function fcKnow() {
-  if (!cardFlipped) { flipCard(); return; }
+function fcKnow(opts = {}) {
+  const allowUnflipped = !!opts.allowUnflipped;
+  if (!cardFlipped && !allowUnflipped) { flipCard(); return; }
   const id = deck[deckIdx].id;
   setKnown(id, true);
   if (document.getElementById('opt-srs')?.checked) updateSRS(id, 5);
@@ -1746,8 +1755,9 @@ function fcKnow() {
   showCard(deckIdx + 1);
 }
 
-function fcUnknown() {
-  if (!cardFlipped) { flipCard(); return; }
+function fcUnknown(opts = {}) {
+  const allowUnflipped = !!opts.allowUnflipped;
+  if (!cardFlipped && !allowUnflipped) { flipCard(); return; }
   const id = deck[deckIdx].id;
   setUnknown(id, true);
   if (document.getElementById('opt-srs')?.checked) updateSRS(id, 0);
@@ -2083,24 +2093,59 @@ function isMobileSwipeMode() {
 (function addSwipe() {
   const cc = document.getElementById('card-container');
   let sx = 0, sy = 0, tx = 0, ty = 0, dragging = false, pointerActive = false;
+  let activePointerId = null;
+  let swipeAnimating = false;
   const leftBadge = document.getElementById('swipe-badge-left');
   const rightBadge = document.getElementById('swipe-badge-right');
 
   function resetSwipeUi() {
     cc.style.transition = 'transform .18s ease';
     cc.style.transform = '';
+    cc.style.opacity = '';
     if (leftBadge) leftBadge.style.opacity = '0';
     if (rightBadge) rightBadge.style.opacity = '0';
   }
 
+  function animateDismissAndGrade(direction) {
+    if (swipeAnimating) return;
+    swipeAnimating = true;
+    const flyDistance = Math.max(window.innerWidth, cc.clientWidth) * 1.25;
+    const moveX = direction * flyDistance;
+    cc.style.transition = 'transform .26s cubic-bezier(0.22,0.9,0.26,1), opacity .26s ease';
+    cc.style.transform = `translateX(${moveX}px) rotate(${direction * 20}deg)`;
+    cc.style.opacity = '0';
+    if (leftBadge) leftBadge.style.opacity = direction < 0 ? '1' : '0';
+    if (rightBadge) rightBadge.style.opacity = direction > 0 ? '1' : '0';
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      swipeAnimating = false;
+      cc.style.transition = '';
+      cc.style.transform = '';
+      cc.style.opacity = '';
+      if (leftBadge) leftBadge.style.opacity = '0';
+      if (rightBadge) rightBadge.style.opacity = '0';
+      suppressFlipUntil = Date.now() + 320;
+      if (direction > 0) fcKnow({ allowUnflipped: true });
+      else fcUnknown({ allowUnflipped: true });
+    };
+
+    cc.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 320);
+  }
+
   cc.addEventListener('pointerdown', e => {
-    if (!isMobileSwipeMode() || e.pointerType === 'mouse') return;
+    if (!isMobileSwipeMode() || e.pointerType === 'mouse' || swipeAnimating) return;
     pointerActive = true;
+    activePointerId = e.pointerId;
+    try { cc.setPointerCapture(e.pointerId); } catch {}
     sx = e.clientX; sy = e.clientY; tx = 0; ty = 0; dragging = false;
   });
 
   cc.addEventListener('pointermove', e => {
-    if (!pointerActive || !isMobileSwipeMode()) return;
+    if (!pointerActive || !isMobileSwipeMode() || e.pointerId !== activePointerId || swipeAnimating) return;
     tx = e.clientX - sx;
     ty = e.clientY - sy;
     dragging = Math.abs(tx) > 10 && Math.abs(tx) > Math.abs(ty);
@@ -2114,16 +2159,18 @@ function isMobileSwipeMode() {
     if (rightBadge) rightBadge.style.opacity = tx > 0 ? String(op) : '0';
   }, { passive: false });
 
-  function finishSwipe() {
+  function finishSwipe(e) {
     if (!pointerActive) return;
+    if (e && activePointerId !== null && e.pointerId !== activePointerId) return;
+    try { if (activePointerId !== null) cc.releasePointerCapture(activePointerId); } catch {}
     pointerActive = false;
+    activePointerId = null;
     const passed = Math.abs(tx) >= 70 && dragging;
-    const canGrade = cardFlipped;
-    resetSwipeUi();
-    if (!passed || !canGrade) return;
-    suppressFlipUntil = Date.now() + 280;
-    if (tx > 0) fcKnow();
-    else fcUnknown();
+    if (!passed) {
+      resetSwipeUi();
+      return;
+    }
+    animateDismissAndGrade(tx > 0 ? 1 : -1);
   }
 
   cc.addEventListener('pointerup', finishSwipe);
