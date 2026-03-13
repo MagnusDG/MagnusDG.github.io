@@ -1,7 +1,7 @@
 {
-  "name": "TOCFL 華語詞彙練習",
-  "short_name": "TOCFL",
-  "description": "14,425 TOCFL Chinese vocabulary flashcards",
+  "name": "Chinese Vocab Trainer",
+  "short_name": "Vocab",
+  "description": "TOCFL and HSK Chinese vocabulary flashcards",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0f4ff",

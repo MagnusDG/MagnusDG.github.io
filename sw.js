@@ -1,5 +1,5 @@
-const CACHE = 'tocfl-v1';
-const ASSETS = ['./', './index.html', './data.js'];
+const CACHE = 'tocfl-v3';
+const ASSETS = ['./', './index.html', './data.js', './data-hsk.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

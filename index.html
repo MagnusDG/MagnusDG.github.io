@@ -57,8 +57,9 @@
     z-index: 100;
     box-shadow: var(--shadow);
   }
-  .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
-  .nav-brand span { color: var(--text2); font-weight: 400; font-size: 0.85rem; margin-left: 8px; }
+  .nav-brand { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .nav-brand-title { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .nav-brand-meta { color: var(--text2); font-weight: 400; font-size: 0.8rem; white-space: nowrap; }
   .nav-right { display: flex; gap: 10px; align-items: center; }
   .btn-icon {
     background: none; border: none; cursor: pointer; font-size: 1.2rem;
@@ -68,6 +69,7 @@
   .btn-icon:hover { background: var(--surface2); }
   .btn-lang { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--text2); transition: all 0.18s; letter-spacing: 0.04em; }
   .btn-lang:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-dataset { min-width: 56px; color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
   .stats-badge {
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: var(--text2);
@@ -166,7 +168,7 @@
   .fc-progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 24px; }
   .fc-progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.3s; }
 
-  .card-container { perspective: 1000px; height: 320px; margin-bottom: 20px; cursor: pointer; }
+  .card-container { perspective: 1000px; height: 320px; margin-bottom: 20px; cursor: pointer; touch-action: pan-y; }
   .card-inner {
     position: relative; width: 100%; height: 100%;
     transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
@@ -179,14 +181,16 @@
   }
   .card-front { background: linear-gradient(135deg, #4f6ef7, #7c3aed); color: #fff; }
   .card-back { background: var(--surface); transform: rotateY(180deg); border: 2px solid var(--border); }
-  .card-word { font-size: 3.8rem; font-weight: 800; margin-bottom: 12px; letter-spacing: 2px; }
+  .card-word { font-size: 3.8rem; font-weight: 800; margin-bottom: 6px; letter-spacing: 2px; }
+  .card-word-alt { font-size: 1.05rem; opacity: 0.85; margin-bottom: 10px; }
   .card-hint { font-size: 0.85rem; opacity: 0.7; }
   .card-zhuyin { font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; font-weight: 600; }
   .card-pinyin { font-size: 1.3rem; color: var(--accent2); font-weight: 700; margin-bottom: 16px; }
   .card-def { font-size: 0.95rem; color: var(--text2); text-align: center; line-height: 1.6; max-height: 120px; overflow-y: auto; }
   .card-level-badge {
     position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.2);
-    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600;
+    border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; font-weight: 600;
+    max-width: 75%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .card-back .card-level-badge { background: var(--surface2); color: var(--text2); }
   .card-star {
@@ -197,6 +201,11 @@
   .card-star.active { color: #fbbf24; }
 
   .fc-hint { text-align: center; font-size: 0.8rem; color: var(--text2); margin-bottom: 20px; }
+  .swipe-guide { display: none; text-align: center; font-size: 0.78rem; color: var(--text2); margin: -8px 0 16px; }
+  #flashcard.mobile-swipe .swipe-guide { display: block; }
+  #flashcard.mobile-swipe #fc-pre-actions,
+  #flashcard.mobile-swipe #fc-post-actions,
+  #flashcard.mobile-swipe .key-hints { display: none !important; }
   .fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .fc-actions.three { grid-template-columns: 1fr 1fr 1fr; }
   .btn-action {
@@ -535,10 +544,12 @@
 <!-- NAV -->
 <nav>
   <div class="nav-brand">
-    <span data-i18n="nav_brand">華語詞彙</span> <span style="color:var(--text2);font-size:0.8rem;font-weight:400">TOCFL 14,425</span>
+    <span class="nav-brand-title" id="nav-brand-title" data-i18n="nav_brand">華語詞彙</span>
+    <span class="nav-brand-meta" id="nav-brand-meta">TOCFL 14,425</span>
   </div>
   <div class="nav-right">
     <span class="streak-pill" id="nav-streak" style="display:none">🔥 <span id="nav-streak-count">0</span></span>
+    <button class="btn-lang btn-dataset" id="btn-dataset" data-i18n-title="dataset_switch_title" title="切換詞彙來源">TOCFL</button>
     <button class="btn-lang" id="btn-lang">EN</button>
     <button class="btn-icon" id="btn-theme" data-i18n-title="nav_theme_title" title="切換深色/淺色模式">🌙</button>
     <button class="btn-icon" id="btn-settings" data-i18n-title="nav_settings_title" title="設定">⚙️</button>
@@ -578,14 +589,14 @@
   <details class="filter-accordion" id="filter-details">
     <summary>🔽 <span data-i18n="filter_title">篩選 &amp; 選項</span></summary>
     <div class="filter-body">
-      <div class="filter-label" data-i18n="cat_title">等別</div>
+      <div class="filter-label" id="cat-title-label" data-i18n="cat_title">等別</div>
       <div class="chip-group" id="cat-chips">
         <div class="chip all active" data-val="all" data-i18n="cat_all">全部</div>
         <div class="chip" data-val="基礎" data-i18n="cat_basic">基礎</div>
         <div class="chip" data-val="進階" data-i18n="cat_adv">進階</div>
         <div class="chip" data-val="精熟" data-i18n="cat_prof">精熟</div>
       </div>
-      <div class="filter-label" data-i18n="level_title">級別</div>
+      <div class="filter-label" id="level-title-label" data-i18n="level_title">級別</div>
       <div class="chip-group" id="level-chips">
         <div class="chip all active" data-val="all" data-i18n="level_all">全部</div>
         <div class="chip" data-val="第1*級">第1*級</div>
@@ -599,6 +610,10 @@
         <div class="chip" data-val="第5級">第5級</div>
         <div class="chip" data-val="第6級">第6級</div>
         <div class="chip" data-val="第7級">第7級</div>
+      </div>
+      <div id="hsk-track-wrap" style="display:none">
+        <div class="filter-label" id="hsk-track-title" data-i18n="hsk_track_title">版本</div>
+        <div class="chip-group" id="hsk-track-chips"></div>
       </div>
 
       <!-- Quiz direction (shown only for quiz mode) -->
@@ -680,6 +695,7 @@
         <button class="card-star" id="card-star-front">☆</button>
         <div class="card-level-badge" id="card-level-front"></div>
         <div class="card-word" id="card-word"></div>
+        <div class="card-word-alt" id="card-word-alt"></div>
         <div class="card-hint" data-i18n="card_hint">點擊翻面</div>
         <button class="btn-tts" id="fc-tts">🔊 <span data-i18n="tts_btn">聽發音</span></button>
       </div>
@@ -704,6 +720,7 @@
   <button class="btn-sm btn-stroke-btn" id="btn-stroke" style="display:none">✍ <span data-i18n="btn_stroke">筆順動畫</span></button>
 
   <div class="fc-hint" id="fc-hint" data-i18n="fc_hint">點擊卡片翻面 · Space 翻面</div>
+  <div class="swipe-guide" id="swipe-guide">← <span data-i18n="swipe_left">不認識</span> · <span data-i18n="swipe_right">認識</span> →</div>
 
   <!-- Actions (before flip) -->
   <div id="fc-pre-actions" style="display:flex;gap:12px;justify-content:center">
@@ -884,7 +901,7 @@
     <canvas id="stats-chart"></canvas>
   </div>
   <div class="chart-wrap">
-    <h3 data-i18n="stats_by_level">各級別進度</h3>
+    <h3 id="stats-by-level-title" data-i18n="stats_by_level">各級別進度</h3>
     <div class="level-bars" id="level-bars"></div>
   </div>
 </div>
@@ -938,7 +955,7 @@
 <div id="toast"></div>
 
 <script src="data.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script src="data-hsk.js"></script>
 <script>
 // ══════════════════════════════════════════════════
 // I18N
@@ -947,21 +964,26 @@ const TRANSLATIONS = {
   zh: {
     nav_brand:'華語詞彙', nav_words:'TOCFL 14,425 詞',
     nav_review_title:'查看已星標 / 答錯的詞', nav_theme_title:'切換深色/淺色模式',
-    loading:'載入詞彙資料中...', loading_fail:'資料載入失敗，請確認 data.js 存在',
+    dataset_switch_title:'切換 TOCFL / HSK',
+    loading:'載入詞彙資料中...', loading_fail:'資料載入失敗，請確認 data.js 與 data-hsk.js 存在',
     home_title:'TOCFL 華語詞彙練習', home_sub:'選擇等級、模式，開始學習 🇹🇼',
     prog_title:'學習進度', prog_known:'已認識', prog_unknown:'需複習', prog_starred:'已星標',
     btn_review_unknown:'複習答錯的詞', btn_review_starred:'複習星標詞', btn_reset:'重置進度',
     cat_title:'等別', level_title:'級別',
     cat_all:'全部', cat_basic:'基礎 (1-4級)', cat_adv:'進階 (5-6級)', cat_prof:'精熟 (7級)', level_all:'全部',
+    hsk_cat_title:'範圍', hsk_level_title:'HSK 級數',
+    hsk_cat_basic:'初級 (HSK 1-3)', hsk_cat_adv:'中級 (HSK 4-6)', hsk_cat_prof:'高級 (HSK 7-9 / 舊版)',
+    hsk_track_title:'版本', hsk_track_all:'全部', hsk_track_new:'新 HSK', hsk_track_old:'舊 HSK',
     mode_fc_label:'翻卡練習', mode_fc_desc:'看中文、猜意思，標記認識與否',
     mode_quiz_label:'測驗模式', mode_quiz_desc:'四選一，測試你的詞彙量',
     quiz_dir_title:'測驗方向', quiz_dir_zh2def:'中文 → 解釋', quiz_dir_def2zh:'解釋 → 中文', quiz_dir_mixed:'混合',
     opt_shuffle:'隨機排序', opt_unknown_only:'只看未認識', opt_starred_only:'只看星標詞',
     deck_label:'本次練習', deck_words:'個詞語', btn_start:'開始練習',
     btn_back:'← 返回', btn_home:'返回主頁',
-    card_hint:'點擊翻面', fc_hint:'點擊卡片翻面 · Space 翻面',
+    card_hint:'點擊翻面', fc_hint:'點擊卡片翻面 · Space 翻面', fc_hint_mobile:'點擊看解釋，左滑不認識，右滑認識',
     fc_skip:'⏭ 跳過', fc_unknown:'✗ 不認識', fc_know:'✓ 認識',
     key_flip:'翻面', key_know:'認識', key_unknown:'不認識', key_skip:'跳過', key_star:'星標',
+    swipe_left:'不認識', swipe_right:'認識',
     fc_end_title:'本輪練習結束！', fc_end_sub:'{0} 張卡片全部完成',
     fce_known_lbl:'認識', fce_unknown_lbl:'不認識', fce_star_lbl:'星標', fce_repeat:'再練不認識的',
     quiz_prompt_zh2def:'請選擇正確的解釋：', quiz_prompt_def2zh:'請選擇對應的中文詞語：',
@@ -975,7 +997,7 @@ const TRANSLATIONS = {
     toast_starred:'⭐ 已加入星標', toast_unstarred:'☆ 已取消星標',
     toast_no_words:'沒有符合條件的詞語', toast_no_review:'沒有需要複習的詞', toast_reset_done:'進度已重置',
     confirm_reset:'確認重置所有學習進度？此操作無法復原。', no_def:'（無解釋）',
-    search_ph:'搜尋中文、拼音、釋義...',
+    search_ph:'搜尋中文或拼音...',
     session_label:'每次最多', session_unit:'張', session_hint:'（0 = 全部）',
     streak_days:'天連續學習',
     tts_btn:'聽發音', tts_auto:'翻卡後自動朗讀',
@@ -995,6 +1017,7 @@ const TRANSLATIONS = {
     listen_end_title:'聽力練習結束！', typing_end_title:'輸入練習結束！',
     stats_title:'學習統計', stats_pct:'完成率', stats_daily:'每日學習（近14天）',
     stats_by_level:'各級別進度', btn_stats:'統計',
+    stats_by_level_tocfl:'TOCFL 各級別進度', stats_by_level_hsk:'HSK 各級別進度',
     pwa_title:'安裝應用程式', pwa_desc:'加入主畫面，隨時離線使用',
     pwa_dismiss:'稍後', pwa_install:'安裝',
     filter_title:'篩選 & 選項',
@@ -1008,21 +1031,26 @@ const TRANSLATIONS = {
   en: {
     nav_brand:'TOCFL Vocab', nav_words:'14,425 words',
     nav_review_title:'View starred / missed words', nav_theme_title:'Toggle dark/light mode',
-    loading:'Loading vocabulary data...', loading_fail:'Failed to load data.js — make sure the file exists.',
+    dataset_switch_title:'Switch TOCFL / HSK dataset',
+    loading:'Loading vocabulary data...', loading_fail:'Failed to load vocabulary assets — make sure data.js and data-hsk.js exist.',
     home_title:'TOCFL Chinese Vocabulary', home_sub:'Select level & mode, start studying 🇹🇼',
     prog_title:'Progress', prog_known:'Known', prog_unknown:'Review', prog_starred:'Starred',
     btn_review_unknown:'Review missed words', btn_review_starred:'Review starred words', btn_reset:'Reset progress',
     cat_title:'Category', level_title:'Level',
     cat_all:'All', cat_basic:'Basic (Levels 1–4)', cat_adv:'Advanced (Levels 5–6)', cat_prof:'Proficient (Level 7)', level_all:'All',
+    hsk_cat_title:'Band', hsk_level_title:'HSK Level',
+    hsk_cat_basic:'Beginner (HSK 1-3)', hsk_cat_adv:'Intermediate (HSK 4-6)', hsk_cat_prof:'Advanced (HSK 7-9 / old)',
+    hsk_track_title:'Version', hsk_track_all:'All', hsk_track_new:'New HSK', hsk_track_old:'Old HSK',
     mode_fc_label:'Flashcards', mode_fc_desc:'See Chinese, guess meaning, mark known/unknown',
     mode_quiz_label:'Quiz', mode_quiz_desc:'4-choice quiz to test your vocabulary',
     quiz_dir_title:'Quiz Direction', quiz_dir_zh2def:'Chinese → Definition', quiz_dir_def2zh:'Definition → Chinese', quiz_dir_mixed:'Mixed',
     opt_shuffle:'Shuffle', opt_unknown_only:'Unknown only', opt_starred_only:'Starred only',
     deck_label:'This session', deck_words:'words', btn_start:'Start',
     btn_back:'← Back', btn_home:'Back to home',
-    card_hint:'Click to flip', fc_hint:'Click card to flip · Space to flip',
+    card_hint:'Click to flip', fc_hint:'Click card to flip · Space to flip', fc_hint_mobile:'Tap to flip, swipe left if unknown, right if known',
     fc_skip:'⏭ Skip', fc_unknown:"✗ Don't know", fc_know:'✓ Know it',
     key_flip:'Flip', key_know:'Know', key_unknown:"Don't know", key_skip:'Skip', key_star:'Star',
+    swipe_left:'Unknown', swipe_right:'Known',
     fc_end_title:'Round Complete!', fc_end_sub:'All {0} cards finished',
     fce_known_lbl:'Known', fce_unknown_lbl:'Unknown', fce_star_lbl:'Starred', fce_repeat:'Retry unknown',
     quiz_prompt_zh2def:'Choose the correct definition:', quiz_prompt_def2zh:'Choose the matching Chinese word:',
@@ -1036,7 +1064,7 @@ const TRANSLATIONS = {
     toast_starred:'⭐ Added to starred', toast_unstarred:'☆ Removed from starred',
     toast_no_words:'No words match the current filters', toast_no_review:'No words to review', toast_reset_done:'Progress reset',
     confirm_reset:'Reset all learning progress? This cannot be undone.', no_def:'(no definition)',
-    search_ph:'Search word, pinyin, definition...',
+    search_ph:'Search Chinese word or pinyin...',
     session_label:'Max per session', session_unit:'cards', session_hint:'(0 = all)',
     streak_days:'day streak',
     tts_btn:'Listen', tts_auto:'Auto-play on flip',
@@ -1056,6 +1084,7 @@ const TRANSLATIONS = {
     listen_end_title:'Listening Complete!', typing_end_title:'Typing Practice Done!',
     stats_title:'Statistics', stats_pct:'Completion', stats_daily:'Daily Study (Last 14 days)',
     stats_by_level:'Progress by Level', btn_stats:'Statistics',
+    stats_by_level_tocfl:'TOCFL Level Progress', stats_by_level_hsk:'HSK Level Progress',
     pwa_title:'Install App', pwa_desc:'Add to home screen for offline use',
     pwa_dismiss:'Later', pwa_install:'Install',
     filter_title:'Filters & Options',
@@ -1069,6 +1098,188 @@ const TRANSLATIONS = {
 };
 
 let currentLang = localStorage.getItem('tocfl_lang') || 'zh';
+let currentDataset = localStorage.getItem('tocfl_dataset') || 'tocfl';
+
+const TOCFL_LEVEL_OPTIONS = [
+  { value: '第1*級', zh: '第1*級', en: 'Level 1*' },
+  { value: '第1級', zh: '第1級', en: 'Level 1' },
+  { value: '第2*級', zh: '第2*級', en: 'Level 2*' },
+  { value: '第2級', zh: '第2級', en: 'Level 2' },
+  { value: '第3*級', zh: '第3*級', en: 'Level 3*' },
+  { value: '第3級', zh: '第3級', en: 'Level 3' },
+  { value: '第4*級', zh: '第4*級', en: 'Level 4*' },
+  { value: '第4級', zh: '第4級', en: 'Level 4' },
+  { value: '第5級', zh: '第5級', en: 'Level 5' },
+  { value: '第6級', zh: '第6級', en: 'Level 6' },
+  { value: '第7級', zh: '第7級', en: 'Level 7' },
+];
+const HSK_LEVEL_ORDER = ['HSK 1', 'HSK 2', 'HSK 3', 'HSK 4', 'HSK 5', 'HSK 6', 'HSK 7-9', 'HSK 1 (old)', 'HSK 2 (old)', 'HSK 3 (old)', 'HSK 4 (old)', 'HSK 5 (old)', 'HSK 6 (old)'];
+const DATASET_CONFIG = {
+  tocfl: {
+    button: 'TOCFL',
+    title: { zh: '華語詞彙', en: 'TOCFL Vocab' },
+    pageTitle: { zh: 'TOCFL 華語詞彙練習', en: 'TOCFL Chinese Vocabulary' },
+  },
+  hsk: {
+    button: 'HSK',
+    title: { zh: 'HSK 詞彙', en: 'HSK Vocab' },
+    pageTitle: { zh: 'HSK 詞彙練習', en: 'HSK Chinese Vocabulary' },
+  },
+};
+
+function getDatasetData(dataset = currentDataset) {
+  return dataset === 'hsk' ? (window.HSK_DATA || []) : (window.VOCAB_DATA || []);
+}
+function getProgressKey() {
+  return currentDataset === 'tocfl' ? 'tocfl_progress_v2' : 'hsk_progress_v1';
+}
+function getSrsKey() {
+  return currentDataset === 'tocfl' ? 'tocfl_srs_v1' : 'hsk_srs_v1';
+}
+function getDailyKey() {
+  return currentDataset === 'tocfl' ? 'tocfl_daily' : 'hsk_daily';
+}
+function getStreakKey() {
+  return currentDataset === 'tocfl' ? 'tocfl_streak' : 'hsk_streak';
+}
+function getStreakDateKey() {
+  return currentDataset === 'tocfl' ? 'tocfl_streak_date' : 'hsk_streak_date';
+}
+function getDatasetCountText(dataset = currentDataset) {
+  return `${DATASET_CONFIG[dataset].button} ${getDatasetData(dataset).length.toLocaleString()}`;
+}
+function sortLevelValues(levels) {
+  const order = currentDataset === 'hsk'
+    ? HSK_LEVEL_ORDER
+    : TOCFL_LEVEL_OPTIONS.map(opt => opt.value);
+  return [...levels].sort((a, b) => {
+    const ai = order.indexOf(a);
+    const bi = order.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b, 'zh-Hant');
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+}
+function getLevelChipOptions() {
+  if (currentDataset === 'tocfl') {
+    return TOCFL_LEVEL_OPTIONS.map(opt => ({ value: opt.value, label: opt[currentLang] }));
+  }
+  const levels = [...new Set(getDatasetData().map(v => v.l).filter(Boolean))];
+  return sortLevelValues(levels).map(level => ({ value: level, label: level }));
+}
+function getCategoryChipOptions() {
+  if (currentDataset === 'hsk') {
+    return [
+      { value: 'all', label: t('cat_all') },
+      { value: '基礎', label: t('hsk_cat_basic') },
+      { value: '進階', label: t('hsk_cat_adv') },
+      { value: '精熟', label: t('hsk_cat_prof') },
+    ];
+  }
+  return [
+    { value: 'all', label: t('cat_all') },
+    { value: '基礎', label: t('cat_basic') },
+    { value: '進階', label: t('cat_adv') },
+    { value: '精熟', label: t('cat_prof') },
+  ];
+}
+function renderCategoryChips() {
+  const container = document.getElementById('cat-chips');
+  if (!container) return;
+  const options = getCategoryChipOptions();
+  let html = '';
+  options.forEach(opt => {
+    const cls = opt.value === 'all' ? 'chip all' : 'chip';
+    html += `<div class="${cls}${filterCat === opt.value ? ' active' : ''}" data-val="${escHtml(opt.value)}">${escHtml(opt.label)}</div>`;
+  });
+  container.innerHTML = html;
+}
+function renderLevelChips() {
+  const container = document.getElementById('level-chips');
+  if (!container) return;
+  const currentValue = filterLevel;
+  const options = getLevelChipOptions();
+  let html = `<div class="chip all${currentValue === 'all' ? ' active' : ''}" data-val="all">${t('level_all')}</div>`;
+  options.forEach(opt => {
+    html += `<div class="chip${currentValue === opt.value ? ' active' : ''}" data-val="${escHtml(opt.value)}">${escHtml(opt.label)}</div>`;
+  });
+  container.innerHTML = html;
+}
+function renderTrackChips() {
+  const wrap = document.getElementById('hsk-track-wrap');
+  const container = document.getElementById('hsk-track-chips');
+  if (!wrap || !container) return;
+  if (currentDataset !== 'hsk') {
+    wrap.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  const options = [
+    { value: 'all', label: t('hsk_track_all') },
+    { value: 'new', label: t('hsk_track_new') },
+    { value: 'old', label: t('hsk_track_old') },
+  ];
+  let html = '';
+  options.forEach(opt => {
+    const cls = opt.value === 'all' ? 'chip all' : 'chip';
+    html += `<div class="${cls}${filterTrack === opt.value ? ' active' : ''}" data-val="${opt.value}">${escHtml(opt.label)}</div>`;
+  });
+  container.innerHTML = html;
+}
+function resetFilterState() {
+  filterCat = 'all';
+  filterLevel = 'all';
+  filterTrack = 'all';
+  renderCategoryChips();
+  renderLevelChips();
+  renderTrackChips();
+}
+function applyDatasetUI() {
+  const cfg = DATASET_CONFIG[currentDataset];
+  document.title = cfg.pageTitle[currentLang];
+  document.getElementById('nav-brand-title').textContent = cfg.title[currentLang];
+  document.getElementById('nav-brand-meta').textContent = getDatasetCountText();
+  const statsByLevelTitle = document.getElementById('stats-by-level-title');
+  if (statsByLevelTitle) {
+    statsByLevelTitle.textContent = currentDataset === 'hsk' ? t('stats_by_level_hsk') : t('stats_by_level_tocfl');
+  }
+  document.getElementById('cat-title-label').textContent = currentDataset === 'hsk' ? t('hsk_cat_title') : t('cat_title');
+  document.getElementById('level-title-label').textContent = currentDataset === 'hsk' ? t('hsk_level_title') : t('level_title');
+  document.getElementById('hsk-track-title').textContent = t('hsk_track_title');
+  const btn = document.getElementById('btn-dataset');
+  btn.textContent = cfg.button;
+  btn.title = t('dataset_switch_title');
+  renderCategoryChips();
+  renderLevelChips();
+  renderTrackChips();
+}
+function setDataset(dataset, { initial = false } = {}) {
+  if (!DATASET_CONFIG[dataset] || !getDatasetData(dataset).length) return;
+  currentDataset = dataset;
+  localStorage.setItem('tocfl_dataset', currentDataset);
+  vocab = getDatasetData();
+  loadProgress();
+  loadSRS();
+  deck = [];
+  deckIdx = 0;
+  sessionKnown = 0;
+  sessionUnknown = 0;
+  quizCorrect = 0;
+  quizWrong = 0;
+  reviewMode = null;
+  if (document.getElementById('search-input')) {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-clear').classList.remove('show');
+    renderSearchResults('');
+  }
+  resetFilterState();
+  applyLang();
+  renderHomeStats();
+  checkStreak();
+  if (!initial) showView('home');
+}
 
 function t(key) {
   return (TRANSLATIONS[currentLang] || TRANSLATIONS.zh)[key] || TRANSLATIONS.zh[key] || key;
@@ -1080,7 +1291,6 @@ function tf(key, ...args) {
 }
 function applyLang() {
   document.documentElement.lang = currentLang === 'zh' ? 'zh-TW' : 'en';
-  document.title = t('home_title');
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const v = TRANSLATIONS[currentLang][el.dataset.i18n];
     if (v !== undefined) el.textContent = v;
@@ -1094,6 +1304,9 @@ function applyLang() {
     if (v !== undefined) el.placeholder = v;
   });
   document.getElementById('btn-lang').textContent = currentLang === 'zh' ? 'EN' : '中文';
+  applyDatasetUI();
+  const fcHint = document.getElementById('fc-hint');
+  if (fcHint) fcHint.textContent = isMobileSwipeMode() ? t('fc_hint_mobile') : t('fc_hint');
   updateDeckInfo();
 }
 document.getElementById('btn-lang').addEventListener('click', () => {
@@ -1101,17 +1314,20 @@ document.getElementById('btn-lang').addEventListener('click', () => {
   localStorage.setItem('tocfl_lang', currentLang);
   applyLang();
 });
+document.getElementById('btn-dataset').addEventListener('click', () => {
+  setDataset(currentDataset === 'tocfl' ? 'hsk' : 'tocfl');
+});
 
 // ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
-const STORAGE_KEY = 'tocfl_progress_v2';
-
 let vocab = [];
 let progress = {}; // id -> { known: bool, unknown: bool, starred: bool }
+let srsData = {};
 let currentMode = 'flashcard';
 let filterCat = 'all';
 let filterLevel = 'all';
+let filterTrack = 'all';
 let quizDir = 'zh2def';
 let deck = [];       // current session deck
 let deckIdx = 0;
@@ -1124,37 +1340,69 @@ let reviewMode = null; // 'starred' | 'unknown'
 // INIT
 // ══════════════════════════════════════════════════
 function init() {
-  vocab = window.VOCAB_DATA || [];
-  loadProgress();
-  applyLang();
+  if (!getDatasetData(currentDataset).length) currentDataset = window.VOCAB_DATA ? 'tocfl' : 'hsk';
+  setDataset(currentDataset, { initial: true });
   checkStreak();
-  renderHomeStats();
   document.getElementById('loading').style.display = 'none';
   applyTheme();
+  loadHanziWriterAsync();
 }
 
-if (window.VOCAB_DATA) {
-  init();
+function showLoadError(msg) {
+  const loadingText = document.querySelector('.loading-text');
+  if (loadingText) loadingText.textContent = msg;
+}
+
+function safeInit() {
+  try {
+    init();
+    return true;
+  } catch (err) {
+    showLoadError(`${t('loading_fail')} (${err?.message || 'runtime error'})`);
+    return false;
+  }
+}
+
+if (window.VOCAB_DATA || window.HSK_DATA) {
+  safeInit();
 } else {
   document.addEventListener('DOMContentLoaded', () => {
-    if (window.VOCAB_DATA) init();
+    if (window.VOCAB_DATA || window.HSK_DATA) safeInit();
     else {
       document.querySelector('.loading-text').textContent = t('loading_fail');
     }
   });
 }
 
+// Prevent infinite loading screen if runtime breaks before init completes
+setTimeout(() => {
+  const loadingEl = document.getElementById('loading');
+  if (!loadingEl || loadingEl.style.display === 'none') return;
+  if (window.VOCAB_DATA || window.HSK_DATA) {
+    if (!safeInit()) showLoadError(`${t('loading_fail')} (init timeout)`);
+  } else {
+    showLoadError(`${t('loading_fail')} (data missing)`);
+  }
+}, 4000);
+
+window.addEventListener('error', e => {
+  const loadingEl = document.getElementById('loading');
+  if (loadingEl && loadingEl.style.display !== 'none') {
+    showLoadError(`${t('loading_fail')} (${e.message || 'script error'})`);
+  }
+});
+
 // ══════════════════════════════════════════════════
 // PROGRESS
 // ══════════════════════════════════════════════════
 function loadProgress() {
   try {
-    progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    progress = JSON.parse(localStorage.getItem(getProgressKey()) || '{}');
   } catch { progress = {}; }
 }
 
 function saveProgress() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  localStorage.setItem(getProgressKey(), JSON.stringify(progress));
 }
 
 function getP(id) { return progress[id] || {}; }
@@ -1198,12 +1446,20 @@ function getFilteredVocab() {
   let list = vocab;
   if (filterCat !== 'all') list = list.filter(v => v.c === filterCat);
   if (filterLevel !== 'all') list = list.filter(v => v.l === filterLevel);
+  if (currentDataset === 'hsk' && filterTrack !== 'all') {
+    list = list.filter(v => {
+      const levels = v.levels || [];
+      return filterTrack === 'old'
+        ? levels.some(level => level.includes('(old)'))
+        : levels.some(level => !level.includes('(old)'));
+    });
+  }
   const unknownOnly = document.getElementById('opt-unknown-only').checked;
   const starredOnly = document.getElementById('opt-starred-only').checked;
   if (unknownOnly) list = list.filter(v => getP(v.id).unknown);
   if (starredOnly) list = list.filter(v => getP(v.id).starred);
   const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
-  if (q) list = list.filter(v => v.w.includes(q) || (v.p && v.p.toLowerCase().includes(q)) || (v.d && v.d.toLowerCase().includes(q)));
+  if (q) list = list.filter(v => v.w.includes(q) || (v.t && v.t.toLowerCase().includes(q)) || (v.p && v.p.toLowerCase().includes(q)));
   return list;
 }
 
@@ -1278,8 +1534,7 @@ document.getElementById('cat-chips').addEventListener('click', e => {
   // If picking a specific category, auto-clear level filter
   if (filterCat !== 'all') {
     filterLevel = 'all';
-    document.querySelectorAll('#level-chips .chip').forEach(c => c.classList.remove('active'));
-    document.querySelector('#level-chips .chip[data-val="all"]').classList.add('active');
+    renderLevelChips();
   }
   updateDeckInfo();
 });
@@ -1294,9 +1549,18 @@ document.getElementById('level-chips').addEventListener('click', e => {
   // Auto clear category if picking specific level
   if (filterLevel !== 'all') {
     filterCat = 'all';
-    document.querySelectorAll('#cat-chips .chip').forEach(c => c.classList.remove('active'));
-    document.querySelector('#cat-chips .chip[data-val="all"]').classList.add('active');
+    renderCategoryChips();
   }
+  updateDeckInfo();
+});
+
+// HSK new/old chips
+document.getElementById('hsk-track-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#hsk-track-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  filterTrack = chip.dataset.val;
   updateDeckInfo();
 });
 
@@ -1368,13 +1632,16 @@ document.getElementById('btn-start').addEventListener('click', () => {
 // FLASHCARD MODE
 // ══════════════════════════════════════════════════
 function startFlashcard() {
+  const isMobile = isMobileSwipeMode();
+  document.getElementById('flashcard').classList.toggle('mobile-swipe', isMobile);
   showView('flashcard');
   document.getElementById('fc-end').style.display = 'none';
   document.getElementById('card-container').style.display = '';
-  document.getElementById('fc-pre-actions').style.display = '';
+  document.getElementById('fc-pre-actions').style.display = isMobile ? 'none' : '';
   document.getElementById('fc-post-actions').style.display = 'none';
   document.getElementById('fc-hint').style.display = '';
-  document.querySelectorAll('.key-hints').forEach(e => e.style.display = '');
+  document.getElementById('fc-hint').textContent = isMobile ? t('fc_hint_mobile') : t('fc_hint');
+  document.querySelectorAll('.key-hints').forEach(e => e.style.display = isMobile ? 'none' : '');
   cardFlipped = false;
   showCard(0);
 }
@@ -1384,16 +1651,22 @@ function showCard(idx) {
   deckIdx = idx;
   cardFlipped = false;
   document.getElementById('card-inner').classList.remove('flipped');
-  document.getElementById('fc-pre-actions').style.display = 'flex';
+  const isMobile = isMobileSwipeMode();
+  document.getElementById('fc-pre-actions').style.display = isMobile ? 'none' : 'flex';
   document.getElementById('fc-post-actions').style.display = 'none';
+  const cc = document.getElementById('card-container');
+  cc.style.transform = '';
+  cc.style.transition = '';
 
   const w = deck[idx];
   document.getElementById('card-word').textContent = w.w;
+  document.getElementById('card-word-alt').textContent = (w.t && w.t !== w.w) ? w.t : '';
   document.getElementById('card-zhuyin').textContent = w.z || '';
   document.getElementById('card-pinyin').textContent = w.p || '';
   document.getElementById('card-def').textContent = w.d || t('no_def');
-  document.getElementById('card-level-front').textContent = w.l;
-  document.getElementById('card-level-back').textContent = w.l;
+  const levelText = currentDataset === 'hsk' && Array.isArray(w.levels) && w.levels.length ? w.levels.join(' · ') : (w.l || '');
+  document.getElementById('card-level-front').textContent = levelText;
+  document.getElementById('card-level-back').textContent = levelText;
 
   const starred = getP(w.id).starred;
   const starF = document.getElementById('card-star-front');
@@ -1416,10 +1689,13 @@ function showCard(idx) {
 }
 
 function flipCard() {
+  const isMobile = isMobileSwipeMode();
   cardFlipped = !cardFlipped;
   document.getElementById('card-inner').classList.toggle('flipped', cardFlipped);
-  document.getElementById('fc-pre-actions').style.display = cardFlipped ? 'none' : 'flex';
-  document.getElementById('fc-post-actions').style.display = cardFlipped ? 'grid' : 'none';
+  if (!isMobile) {
+    document.getElementById('fc-pre-actions').style.display = cardFlipped ? 'none' : 'flex';
+    document.getElementById('fc-post-actions').style.display = cardFlipped ? 'grid' : 'none';
+  }
   if (cardFlipped && document.getElementById('opt-tts-auto')?.checked) speakCurrent();
   updateAiArea();
 }
@@ -1731,13 +2007,10 @@ document.getElementById('review-back').addEventListener('click', () => { showVie
 // ══════════════════════════════════════════════════
 // SRS  (SM-2 algorithm)
 // ══════════════════════════════════════════════════
-const SRS_KEY = 'tocfl_srs_v1';
-let srsData = {};
-
 function loadSRS() {
-  try { srsData = JSON.parse(localStorage.getItem(SRS_KEY) || '{}'); } catch { srsData = {}; }
+  try { srsData = JSON.parse(localStorage.getItem(getSrsKey()) || '{}'); } catch { srsData = {}; }
 }
-function saveSRS() { localStorage.setItem(SRS_KEY, JSON.stringify(srsData)); }
+function saveSRS() { localStorage.setItem(getSrsKey(), JSON.stringify(srsData)); }
 function getSRS(id) {
   return srsData[id] || { ef: 2.5, interval: 0, due: 0, reps: 0 };
 }
@@ -1767,6 +2040,10 @@ function buildSRSDeck(list) {
   return due;
 }
 
+function isMobileSwipeMode() {
+  return window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
+}
+
 // ══════════════════════════════════════════════════
 // SWIPE GESTURES (flashcard)
 // ══════════════════════════════════════════════════
@@ -1774,29 +2051,32 @@ function buildSRSDeck(list) {
   const cc = document.getElementById('card-container');
   let tx = 0, ty = 0, startX = 0, startY = 0, dragging = false;
   cc.addEventListener('touchstart', e => {
+    if (!isMobileSwipeMode()) return;
     startX = e.touches[0].clientX; startY = e.touches[0].clientY;
     tx = 0; ty = 0; dragging = false;
   }, { passive: true });
   cc.addEventListener('touchmove', e => {
+    if (!isMobileSwipeMode()) return;
     tx = e.touches[0].clientX - startX;
     ty = e.touches[0].clientY - startY;
-    dragging = Math.abs(tx) > 8;
+    dragging = Math.abs(tx) > 8 && Math.abs(tx) > Math.abs(ty);
     if (dragging) {
-      const ci = document.getElementById('card-inner');
-      ci.style.transition = 'none';
-      ci.style.transform = cardFlipped ? `rotateY(180deg) translateX(${-tx}px)` : `translateX(${tx}px)`;
+      cc.style.transition = 'none';
+      const deg = Math.max(-12, Math.min(12, tx / 14));
+      cc.style.transform = `translateX(${tx}px) rotate(${deg}deg)`;
     }
   }, { passive: true });
   cc.addEventListener('touchend', () => {
-    const ci = document.getElementById('card-inner');
-    ci.style.transition = '';
-    ci.style.transform = '';
+    if (!isMobileSwipeMode()) return;
+    cc.style.transition = 'transform .18s ease';
+    cc.style.transform = '';
     if (!dragging) return;
     if (Math.abs(tx) < 60) return; // not far enough
+    if (!cardFlipped) return; // mobile flow: tap first to view meaning
     if (tx > 0) { // swipe right = know
-      if (cardFlipped) fcKnow(); else { flipCard(); }
+      fcKnow();
     } else {       // swipe left = unknown
-      if (cardFlipped) fcUnknown(); else { flipCard(); }
+      fcUnknown();
     }
   });
 })();
@@ -1994,7 +2274,7 @@ function showStats() {
   document.getElementById('sc-pct').textContent = pct + '%';
 
   // Daily chart (last 14 days)
-  const dailyKey = 'tocfl_daily';
+  const dailyKey = getDailyKey();
   let daily = {};
   try { daily = JSON.parse(localStorage.getItem(dailyKey) || '{}'); } catch {}
   const today = new Date();
@@ -2009,7 +2289,7 @@ function showStats() {
   drawBarChart('stats-chart', labels, data);
 
   // Level breakdown
-  const levels = [...new Set(vocab.map(v=>v.l))].sort();
+  const levels = sortLevelValues([...new Set(vocab.map(v => v.l))]);
   const container = document.getElementById('level-bars');
   container.innerHTML = '';
   levels.forEach(lv => {
@@ -2057,9 +2337,23 @@ function drawBarChart(canvasId, labels, data) {
   });
 }
 
+function loadHanziWriterAsync() {
+  if (window.HanziWriter || document.getElementById('hanzi-writer-loader')) return;
+  const script = document.createElement('script');
+  script.id = 'hanzi-writer-loader';
+  script.src = 'https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js';
+  script.async = true;
+  script.referrerPolicy = 'no-referrer';
+  script.onerror = () => {
+    const btnStroke = document.getElementById('btn-stroke');
+    if (btnStroke) btnStroke.style.display = 'none';
+  };
+  document.head.appendChild(script);
+}
+
 function recordDailyActivity() {
   const key = new Date().toISOString().slice(0,10);
-  const dailyKey = 'tocfl_daily';
+  const dailyKey = getDailyKey();
   let daily = {};
   try { daily = JSON.parse(localStorage.getItem(dailyKey) || '{}'); } catch {}
   daily[key] = (daily[key] || 0) + 1;
@@ -2136,14 +2430,16 @@ function toast(msg) {
 // ══════════════════════════════════════════════════
 function checkStreak() {
   const today = new Date().toDateString();
-  const last  = localStorage.getItem('tocfl_streak_date');
-  let streak  = parseInt(localStorage.getItem('tocfl_streak') || '0');
+  const streakDateKey = getStreakDateKey();
+  const streakKey = getStreakKey();
+  const last  = localStorage.getItem(streakDateKey);
+  let streak  = parseInt(localStorage.getItem(streakKey) || '0');
   const yesterday = new Date(Date.now() - 86400000).toDateString();
   if (last === today) { /* same day, no change */ }
   else if (last === yesterday) { streak += 1; }
   else { streak = 1; }
-  localStorage.setItem('tocfl_streak', streak);
-  localStorage.setItem('tocfl_streak_date', today);
+  localStorage.setItem(streakKey, streak);
+  localStorage.setItem(streakDateKey, today);
   const el   = document.getElementById('prog-streak');
   const row  = document.getElementById('streak-row');
   const nav  = document.getElementById('nav-streak');
@@ -2185,8 +2481,8 @@ function renderSearchResults(q) {
   const ql = q.toLowerCase();
   const hits = vocab.filter(v =>
     v.w.includes(q) ||
-    (v.p && v.p.toLowerCase().includes(ql)) ||
-    (v.d && v.d.toLowerCase().includes(ql))
+    (v.t && v.t.toLowerCase().includes(ql)) ||
+    (v.p && v.p.toLowerCase().includes(ql))
   );
   box.innerHTML = '';
   const meta = document.createElement('div');
@@ -2213,8 +2509,8 @@ function renderSearchResults(q) {
     const item = document.createElement('div');
     item.className = 'sr-item';
     const wEl = document.createElement('span'); wEl.className = 'sr-word'; wEl.textContent = v.w;
-    const pEl = document.createElement('span'); pEl.className = 'sr-pin';  pEl.textContent = v.p || '';
-    const dEl = document.createElement('span'); dEl.className = 'sr-def';  dEl.textContent = v.d || t('no_def');
+    const pEl = document.createElement('span'); pEl.className = 'sr-pin';  pEl.textContent = v.p || (v.t && v.t !== v.w ? v.t : '');
+    const dEl = document.createElement('span'); dEl.className = 'sr-def';  dEl.textContent = v.t && v.t !== v.w ? `${v.t} · ${v.d || t('no_def')}` : (v.d || t('no_def'));
     item.appendChild(wEl); item.appendChild(pEl); item.appendChild(dEl);
     item.addEventListener('click', () => {
       deck = [v]; deckIdx = 0; sessionKnown = 0; sessionUnknown = 0;
@@ -2268,7 +2564,7 @@ document.getElementById('btn-export').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `tocfl_progress_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `${currentDataset}_progress_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast(t('toast_exported'));
